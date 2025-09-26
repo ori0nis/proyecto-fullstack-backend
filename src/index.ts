@@ -29,7 +29,7 @@ app.use((error: CustomError, req: Request, res: Response, next: NextFunction) =>
   res.status(status).json({ message });
 });
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const error: CustomError = new Error("Route not found");
   error.status = 404;
   next(error);

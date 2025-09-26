@@ -1,13 +1,20 @@
 import mongoose from "mongoose";
 
-const plantSchema = new mongoose.Schema(
+interface Plant {
+  scientific_name: string,
+  nick_name: string,
+  img: string,
+  type: "tropical" | "desert" | "temperate" | "alpine"
+}
+
+const plantSchema = new mongoose.Schema<Plant>(
   {
-    scientificName: { type: String, required: true, trim: true },
-    nickName: { type: String, required: true, trim: true },
+    scientific_name: { type: String, required: true, trim: true },
+    nick_name: { type: String, required: true, trim: true },
     img: { type: String, required: true, trim: true },
     type: {
       type: String,
-      enum: ["tropical", "desertica", "templada", "alpina"],
+      enum: ["tropical", "desert", "temperate", "alpine"],
       required: true,
     },
   },

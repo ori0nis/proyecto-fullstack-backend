@@ -10,10 +10,7 @@ export const connectDB = async () => {
 
     if (connected) console.log("Successfully connected to MongoAtlas");
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(error.message);
-    } else {
-      console.error(error);
-    }
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
   }
 };

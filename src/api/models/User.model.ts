@@ -1,7 +1,19 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
 
-const userSchema = new mongoose.Schema(
+interface User {
+  name: string;
+  email: string;
+  password: string;
+  img: string;
+  plant_care_skill_level: string;
+  role: string;
+  plants: Types.ObjectId[];
+}
+
+const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admin", "user", "login"];
+
+const userSchema = new mongoose.Schema<User>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
@@ -10,17 +22,43 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
       minlength: [8, "Password must contain at least 8 characters"],
+      validate: [
+        {
+          validator: (value: string) => value === value.trim(),
+          message: "Password can't contain spaces at the start or end",
+        },
+        {
+          validator: (value: string) => /[a-z]/.test(value),
+          message: "Password must contain at least one lowercase character",
+        },
+        {
+          validator: (value: string) => /[A-Z]/.test(value),
+          message: "Password must contain at least one uppercase character",
+        },
+        {
+          validator: (value: string) => /\d/.test(value),
+          message: "Password must contain at least one number",
+        },
+        {
+          validator: (value: string) => /[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(value),
+          message: "Password must contain at least one special character",
+        },
+        {
+          validator: (value: string) => !lowSecurityPassword.includes(value),
+          message: "Password is too insecure",
+        },
+      ],
     },
     img: { type: String, required: true, trim: true },
-    plantCareSkillLevel: {
+    plant_care_skill_level: {
       type: String,
-      enum: ["principiante", "intermedio", "avanzado", "Demeter"],
+      enum: ["beginner", "intermediate", "advanced", "Demeter"],
       required: true,
     },
     role: {
       type: String,
       enum: ["user", "admin"],
-      default: "user", // El user siempre tiene el rol user por default
+      default: "user", // User always as role user by default
       required: true,
       trim: true,
     },

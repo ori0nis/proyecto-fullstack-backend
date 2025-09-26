@@ -22,7 +22,7 @@
 
     // Style Options
     "strict": true,
-    "esModuleInterop": true,       // Permite import X from 'x'
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
     // Recommended Options

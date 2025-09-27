@@ -1,19 +1,10 @@
 import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
-
-interface User {
-  name: string;
-  email: string;
-  password: string;
-  img: string;
-  plant_care_skill_level: string;
-  role: string;
-  plants: Types.ObjectId[];
-}
+import { UserType } from "../../types/user";
 
 const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admin", "user", "login"];
 
-const userSchema = new mongoose.Schema<User>(
+const userSchema = new mongoose.Schema<UserType>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },

@@ -1,14 +1,19 @@
-import { Plant } from "./../models/Plant.model";
+import { NewPlantType, PlantResponse, PlantType } from "../../types/plant";
+import { Plant } from "./../models";
 import { type Request, type Response, type NextFunction } from "express";
 
 // GET ALL PLANTS
-export const getAllPlants = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllPlants = async (
+  req: Request,
+  res: Response<PlantResponse<PlantType[]>>,
+  next: NextFunction
+): Promise<void> => {
   try {
     const plants = await Plant.find();
 
     res.status(200).json({
       message: "Plants found",
-      plants: plants,
+      data: plants,
     });
   } catch (error) {
     next(error);
@@ -16,7 +21,11 @@ export const getAllPlants = async (req: Request, res: Response, next: NextFuncti
 };
 
 // GET PLANT BY ID
-export const getPlantById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getPlantById = async (
+  req: Request<{ id: string }>,
+  res: Response<PlantResponse<PlantType>>,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { id } = req.params;
     const plant = await Plant.findById(id);
@@ -25,6 +34,7 @@ export const getPlantById = async (req: Request, res: Response, next: NextFuncti
       res.status(404).json({
         message: "Plant not found",
         status: 404,
+        data: null,
       });
 
       return;
@@ -32,7 +42,7 @@ export const getPlantById = async (req: Request, res: Response, next: NextFuncti
 
     res.status(200).json({
       message: "Plant found",
-      plant: plant,
+      data: plant,
     });
   } catch (error) {
     next(error);
@@ -40,7 +50,11 @@ export const getPlantById = async (req: Request, res: Response, next: NextFuncti
 };
 
 // POST NEW PLANT
-export const postNewPlant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const postNewPlant = async (
+  req: Request<{}, {}, NewPlantType>,
+  res: Response<PlantResponse<PlantType>>,
+  next: NextFunction
+): Promise<void> => {
   try {
     const plant = new Plant(req.body);
 
@@ -48,7 +62,7 @@ export const postNewPlant = async (req: Request, res: Response, next: NextFuncti
 
     res.status(201).json({
       message: "Plant posted",
-      plant: plantPosted,
+      data: plantPosted,
     });
   } catch (error) {
     next(error);
@@ -56,7 +70,12 @@ export const postNewPlant = async (req: Request, res: Response, next: NextFuncti
 };
 
 // EDIT PLANT
-export const editPlant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//? Request type is only partial and of NewPlantType to avoid security concerns regarding _id
+export const editPlant = async (
+  req: Request<{ id: string }, {}, Partial<NewPlantType>>,
+  res: Response<PlantResponse<PlantType>>,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { id } = req.params;
     const plant = await Plant.findById(id);
@@ -66,14 +85,17 @@ export const editPlant = async (req: Request, res: Response, next: NextFunction)
       res.status(404).json({
         message: "Plant not found",
         status: 404,
+        data: null,
       });
+
+      return;
     }
 
-    const plantPosted = await Plant.findByIdAndUpdate(id, updatedPlant, { new: true });
+    const plantUpdated = await Plant.findByIdAndUpdate(id, updatedPlant, { new: true });
 
     res.status(200).json({
       message: "Plant updated",
-      plant: plantPosted,
+      data: plantUpdated,
     });
   } catch (error) {
     next(error);
@@ -81,7 +103,11 @@ export const editPlant = async (req: Request, res: Response, next: NextFunction)
 };
 
 // DELETE PLANT
-export const deletePlant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deletePlant = async (
+  req: Request<{ id: string }>,
+  res: Response<PlantResponse<PlantType>>,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { id } = req.params;
     const plant = Plant.findById(id);
@@ -90,14 +116,17 @@ export const deletePlant = async (req: Request, res: Response, next: NextFunctio
       res.status(404).json({
         message: "Plant not found",
         status: 404,
+        data: null,
       });
+
+      return;
     }
 
     const plantDeleted = await Plant.findByIdAndDelete(id);
 
     res.status(200).json({
       message: "Plant deleted",
-      plant: plantDeleted,
+      data: plantDeleted,
     });
   } catch (error) {
     next(error);

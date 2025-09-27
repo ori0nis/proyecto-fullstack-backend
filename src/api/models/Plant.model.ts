@@ -1,13 +1,7 @@
 import mongoose from "mongoose";
+import { PlantType } from "../../types/plant";
 
-interface Plant {
-  scientific_name: string,
-  nick_name: string,
-  img: string,
-  type: "tropical" | "desert" | "temperate" | "alpine"
-}
-
-const plantSchema = new mongoose.Schema<Plant>(
+const plantSchema = new mongoose.Schema<PlantType>(
   {
     scientific_name: { type: String, required: true, trim: true },
     nick_name: { type: String, required: true, trim: true },

@@ -4,7 +4,8 @@ import { PlantType } from "../../types/plant";
 const plantSchema = new mongoose.Schema<PlantType>(
   {
     scientific_name: { type: String, required: true, trim: true },
-    nick_name: { type: String, required: true, trim: true },
+    common_name: { type: String, required: true, trim: true },
+    nickname: { type: String, required: true, trim: true },
     img: { type: String, required: true, trim: true },
     type: {
       type: String,

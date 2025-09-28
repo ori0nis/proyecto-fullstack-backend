@@ -5,7 +5,8 @@ import { Types } from "mongoose";
 export interface PlantType {
   _id: Types.ObjectId;
   scientific_name: string;
-  nick_name: string;
+  common_name: string;
+  nickname: string;
   img: string;
   type: "tropical" | "desert" | "temperate" | "alpine";
 }

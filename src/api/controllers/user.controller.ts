@@ -1,19 +1,36 @@
+//? req.user is always double checked even after passing isAuth(), as a good practice
+
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUserType, UserResponseType, UserType } from "../../types/user";
+import { NewUserType, UserResponseType, UserType, LoginResponse, LoginUserType } from "../../types/user";
 import { User } from "../models";
+import { generateToken } from "../../utils/jwt";
+import { AuthRequest } from "../../types/jwt";
 
 // GET ALL USERS
 export const getAllUsers = async (
-  req: Request,
+  req: AuthRequest,
   res: Response<UserResponseType<UserType[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
+    const user = req.user;
+
+    if (!user) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
     const users = await User.find();
 
     res.status(200).json({
       message: "Users found",
+      status: 200,
       data: users,
     });
   } catch (error) {
@@ -23,28 +40,39 @@ export const getAllUsers = async (
 
 // GET USER BY ID
 export const getUserById = async (
-  req: Request<{ id: string }>,
+  req: AuthRequest<{ id: string }>,
   res: Response<UserResponseType<UserType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+    const user = req.user;
 
     if (!user) {
-      res.status(404).json({
-        message: "User not found",
-        status: 404,
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
         data: null,
       });
 
       return;
     }
 
-    res.status(200).json({
-      message: "User found",
-      data: user,
-    });
+    const userInDatabase = await User.findById(id);
+
+    if (!userInDatabase) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+    } else {
+      res.status(200).json({
+        message: "User found",
+        status: 200,
+        data: userInDatabase,
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -57,12 +85,18 @@ export const registerUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = new User(req.body);
+    const user = new User({
+      ...req.body,
+      role: "user",
+    });
 
     const userPosted = await user.save();
 
+    await userPosted.populate("plants");
+
     res.status(201).json({
       message: "User created",
+      status: 201,
       data: userPosted,
     });
   } catch (error) {
@@ -72,8 +106,8 @@ export const registerUser = async (
 
 // LOGIN
 export const loginUser = async (
-  req: Request<{}, {}, UserType>,
-  res: Response<UserResponseType<UserType>>,
+  req: Request<{}, {}, LoginUserType>,
+  res: Response<UserResponseType<LoginResponse>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -90,11 +124,18 @@ export const loginUser = async (
     }
 
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      // TODO: JWT and isAuth
-      // const token =
+      const token = generateToken({
+        _id: user._id.toString(),
+        role: user.role,
+      });
+
       res.status(200).json({
         message: "User logged in with token",
-        data: user, // token to add
+        status: 200,
+        data: {
+          token,
+          user,
+        },
       });
     } else {
       res.status(401).json({
@@ -110,16 +151,28 @@ export const loginUser = async (
 
 // EDIT USER
 export const editUser = async (
-  req: Request<{ id: string }, {}, Partial<NewUserType>>,
+  req: AuthRequest<{ id: string }, {}, Partial<NewUserType>>,
   res: Response<UserResponseType<UserType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
     const updatedUser = req.body;
+    const user = req.user;
 
     if (!user) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await User.findById(id);
+
+    if (!userInDatabase) {
       res.status(404).json({
         message: "User not found",
         status: 404,
@@ -133,6 +186,7 @@ export const editUser = async (
 
     res.status(200).json({
       message: "User updated",
+      status: 200,
       data: userUpdated,
     });
   } catch (error) {
@@ -142,15 +196,27 @@ export const editUser = async (
 
 // DELETE USER
 export const deleteUser = async (
-  req: Request<{ id: string }>,
+  req: AuthRequest<{ id: string }>,
   res: Response<UserResponseType<UserType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+    const user = req.user;
 
     if (!user) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await User.findById(id);
+
+    if (!userInDatabase) {
       res.status(404).json({
         message: "User not found",
         status: 404,
@@ -164,6 +230,7 @@ export const deleteUser = async (
 
     res.status(200).json({
       message: "User deleted",
+      status: 200,
       data: userDeleted,
     });
   } catch (error) {

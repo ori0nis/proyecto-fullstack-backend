@@ -8,13 +8,14 @@
     "dev": "nodemon"
   },
   "keywords": [],
-  "author": "",
+  "author": "Oihane GDCL",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.5.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
@@ -25,6 +26,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.2"
   }

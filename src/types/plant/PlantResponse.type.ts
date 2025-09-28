@@ -3,5 +3,5 @@
 export interface PlantResponse<T> {
   data: T | null;
   message: string;
-  status?: number;
+  status: number;
 }

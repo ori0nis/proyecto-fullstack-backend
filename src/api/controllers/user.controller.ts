@@ -6,6 +6,7 @@ import { NewUserType, UserResponseType, UserType, LoginResponse, LoginUserType }
 import { User } from "../models/index.js";
 import { generateToken } from "../../utils/jwt/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
+import { supabaseUpload } from "../../middlewares/supabaseUpload.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -93,7 +94,14 @@ export const registerUser = async (
     // First we save the mongoose document, then we translate it to plain object so that it can be typed with UserType
     const userDocument = await user.save();
     await userDocument.populate("plants");
-    const userPosted = (await userDocument.save()).toObject() as unknown as UserType;
+
+    if (req.file) {
+      const img = await supabaseUpload(req.file);
+      userDocument.img = img;
+      await userDocument.save();
+    }
+
+    const userPosted = (await userDocument.save()).toObject() as UserType;
 
     res.status(201).json({
       message: "User created",

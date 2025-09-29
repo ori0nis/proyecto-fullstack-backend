@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { PlantType } from "../../types/plant";
+import { PlantType } from "../../types/plant/index.js";
 
 const plantSchema = new mongoose.Schema<PlantType>(
   {

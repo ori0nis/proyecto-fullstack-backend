@@ -1,8 +1,8 @@
-//? req.user is always double checked even after passing isAuth(), as a good practice
+//? req.user is always double checked even after passing isAuth(), as a good practice. Mongoose documents are returned with .lean() so that they're in plain object format and can be assigned as PlantType
 
-import { AuthRequest } from "../../types/jwt";
-import { NewPlantType, PlantResponse, PlantType } from "../../types/plant";
-import { Plant } from "./../models";
+import { AuthRequest } from "../../types/jwt/index.js";
+import { NewPlantType, PlantResponse, PlantType } from "../../types/plant/index.js";
+import { Plant } from "./../models/index.js";
 import { type Response, type NextFunction } from "express";
 
 // GET ALL PLANTS
@@ -24,7 +24,7 @@ export const getAllPlants = async (
       return;
     }
 
-    const plants = await Plant.find();
+    const plants = await Plant.find().lean<PlantType[]>();
 
     res.status(200).json({
       message: "Plants found",
@@ -44,8 +44,6 @@ export const getPlantById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const plant = await Plant.findById(id);
-
     const user = req.user;
 
     if (!user) {
@@ -58,6 +56,8 @@ export const getPlantById = async (
       return;
     }
 
+    const plant = await Plant.findById(id).lean<PlantType>();
+
     if (!plant) {
       res.status(404).json({
         message: "Plant not found",
@@ -66,13 +66,13 @@ export const getPlantById = async (
       });
 
       return;
+    } else {
+      res.status(200).json({
+        message: "Plant found",
+        status: 200,
+        data: plant,
+      });
     }
-
-    res.status(200).json({
-      message: "Plant found",
-      status: 200,
-      data: plant,
-    });
   } catch (error) {
     next(error);
   }
@@ -97,7 +97,7 @@ export const getUsersPlants = async (
       return;
     }
 
-    const plants = await Plant.find({ _id: { $in: user.plants } });
+    const plants = await Plant.find({ _id: { $in: user.plants } }).lean<PlantType[]>();
 
     res.status(200).json({
       message: "Plants found",
@@ -129,8 +129,7 @@ export const postNewPlant = async (
     }
 
     const plant = new Plant(req.body);
-
-    const plantPosted = await plant.save();
+    const plantPosted = (await plant.save()).toObject() as unknown as PlantType; // First needs to be unknown because TS can't infer the initial type
 
     res.status(201).json({
       message: "Plant posted",
@@ -151,7 +150,6 @@ export const editPlant = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const plant = await Plant.findById(id);
     const updatedPlant = req.body;
     const user = req.user;
 
@@ -165,6 +163,8 @@ export const editPlant = async (
       return;
     }
 
+    const plant = await Plant.findById(id).lean<PlantType>();
+
     if (!plant) {
       res.status(404).json({
         message: "Plant not found",
@@ -175,7 +175,7 @@ export const editPlant = async (
       return;
     }
 
-    const plantUpdated = await Plant.findByIdAndUpdate(id, updatedPlant, { new: true });
+    const plantUpdated = await Plant.findByIdAndUpdate(id, updatedPlant, { new: true }).lean<PlantType>();
 
     res.status(200).json({
       message: "Plant updated",
@@ -195,8 +195,6 @@ export const deletePlant = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const plant = await Plant.findById(id);
-
     const user = req.user;
 
     if (!user) {
@@ -209,6 +207,8 @@ export const deletePlant = async (
       return;
     }
 
+    const plant = await Plant.findById(id).lean<PlantType>();
+
     if (!plant) {
       res.status(404).json({
         message: "Plant not found",
@@ -219,7 +219,7 @@ export const deletePlant = async (
       return;
     }
 
-    const plantDeleted = await Plant.findByIdAndDelete(id);
+    const plantDeleted = await Plant.findByIdAndDelete(id).lean<PlantType>();
 
     res.status(200).json({
       message: "Plant deleted",

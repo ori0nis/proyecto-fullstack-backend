@@ -2,10 +2,10 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUserType, UserResponseType, UserType, LoginResponse, LoginUserType } from "../../types/user";
-import { User } from "../models";
-import { generateToken } from "../../utils/jwt";
-import { AuthRequest } from "../../types/jwt";
+import { NewUserType, UserResponseType, UserType, LoginResponse, LoginUserType } from "../../types/user/index.js";
+import { User } from "../models/index.js";
+import { generateToken } from "../../utils/jwt/index.js";
+import { AuthRequest } from "../../types/jwt/index.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -26,7 +26,7 @@ export const getAllUsers = async (
       return;
     }
 
-    const users = await User.find();
+    const users = await User.find().lean<UserType[]>();
 
     res.status(200).json({
       message: "Users found",
@@ -58,7 +58,7 @@ export const getUserById = async (
       return;
     }
 
-    const userInDatabase = await User.findById(id);
+    const userInDatabase = await User.findById(id).lean<UserType>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -90,9 +90,10 @@ export const registerUser = async (
       role: "user",
     });
 
-    const userPosted = await user.save();
-
-    await userPosted.populate("plants");
+    // First we save the mongoose document, then we translate it to plain object so that it can be typed with UserType
+    const userDocument = await user.save();
+    await userDocument.populate("plants");
+    const userPosted = (await userDocument.save()).toObject() as unknown as UserType;
 
     res.status(201).json({
       message: "User created",
@@ -111,7 +112,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findOne({ email: req.body.email }).populate("plants");
+    const user = await User.findOne<UserType>({ email: req.body.email }).populate("plants");
 
     if (!user) {
       res.status(401).json({
@@ -119,31 +120,32 @@ export const loginUser = async (
         status: 401,
         data: null,
       });
-
       return;
     }
 
-    if (bcrypt.compareSync(req.body.password, user.password)) {
-      const token = generateToken({
-        _id: user._id.toString(),
-        role: user.role,
-      });
-
-      res.status(200).json({
-        message: "User logged in with token",
-        status: 200,
-        data: {
-          token,
-          user,
-        },
-      });
-    } else {
+    const passwordMatches = bcrypt.compareSync(req.body.password, user.password);
+    if (!passwordMatches) {
       res.status(401).json({
         message: "Email or password do not match",
         status: 401,
         data: null,
       });
+      return;
     }
+
+    const token = generateToken({
+      _id: user._id.toString(),
+      role: user.role,
+    });
+
+    res.status(200).json({
+      message: "User logged in with token",
+      status: 200,
+      data: {
+        token,
+        user,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -170,7 +172,7 @@ export const editUser = async (
       return;
     }
 
-    const userInDatabase = await User.findById(id);
+    const userInDatabase = await User.findById(id).lean<UserType>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -182,7 +184,7 @@ export const editUser = async (
       return;
     }
 
-    const userUpdated = await User.findByIdAndUpdate(id, updatedUser, { new: true });
+    const userUpdated = await User.findByIdAndUpdate(id, updatedUser, { new: true }).lean<UserType>();
 
     res.status(200).json({
       message: "User updated",
@@ -214,7 +216,7 @@ export const deleteUser = async (
       return;
     }
 
-    const userInDatabase = await User.findById(id);
+    const userInDatabase = await User.findById(id).lean<UserType>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -226,7 +228,7 @@ export const deleteUser = async (
       return;
     }
 
-    const userDeleted = await User.findByIdAndDelete(id);
+    const userDeleted = await User.findByIdAndDelete(id).lean<UserType>();
 
     res.status(200).json({
       message: "User deleted",

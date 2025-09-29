@@ -1,7 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { connectDB } from "./config";
+import { connectDB } from "./config/mongoose/index.js";
 
 interface CustomError extends Error {
   status?: number;

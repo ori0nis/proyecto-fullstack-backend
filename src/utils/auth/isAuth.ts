@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from "express";
-import { UserResponseType, UserType } from "../../types/user";
-import { verifyToken } from "../jwt";
-import { User } from "../../api/models";
-import { AuthRequest, JWTPayload } from "../../types/jwt";
+import { Response, NextFunction } from "express";
+import { UserResponseType, UserType } from "../../types/user/index.js";
+import { verifyToken } from "../jwt/index.js";
+import { User } from "../../api/models/index.js";
+import { AuthRequest, JWTPayload } from "../../types/jwt/index.js";
 
 export const isAuth = async (
   req: AuthRequest,

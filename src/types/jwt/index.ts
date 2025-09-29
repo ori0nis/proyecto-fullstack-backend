@@ -1,2 +1,2 @@
-export * from "./JWTPayload.type";
-export * from "./AuthRequest.type";
+export * from "./JWTPayload.type.js";
+export * from "./AuthRequest.type.js";

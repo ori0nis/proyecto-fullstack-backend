@@ -1,4 +1,4 @@
-import { UserType } from "./UserType.type";
+import { UserType } from "./UserType.type.js";
 
 export interface LoginResponse {
   token: string;

@@ -1,6 +1,6 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { UserType } from "../../types/user";
+import { UserType } from "../../types/user/index.js";
 
 const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admin", "user", "login"];
 

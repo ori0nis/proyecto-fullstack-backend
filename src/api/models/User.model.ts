@@ -67,7 +67,7 @@ const userSchema = new mongoose.Schema<UserType>(
       required: false,
       trim: true,
     },
-    plants: [{ type: mongoose.Types.ObjectId, ref: "plants" }],
+    plants: [{ type: mongoose.Types.ObjectId, ref: "plants", required: false }],
   },
   {
     timestamps: true,

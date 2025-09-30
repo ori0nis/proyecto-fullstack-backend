@@ -108,12 +108,14 @@ export const registerUser = async (
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
     const savedUser = await (await user.save()).populate("plants");
-    const userPosted = savedUser.toObject() as PublicUserType;
+    const userPosted = savedUser.toObject();
+
+    const {password: _password, role, ...publicUser} = userPosted;
 
     res.status(201).json({
       message: "User created",
       status: 201,
-      data: userPosted,
+      data: publicUser,
     });
   } catch (error) {
     next(error);

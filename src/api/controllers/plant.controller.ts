@@ -150,7 +150,7 @@ export const editPlant = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const updatedPlant = req.body;
+    const updates = req.body;
     const user = req.user;
 
     if (!user) {
@@ -175,7 +175,7 @@ export const editPlant = async (
       return;
     }
 
-    const plantUpdated = await Plant.findByIdAndUpdate(id, updatedPlant, { new: true }).lean<PlantType>();
+    const plantUpdated = await Plant.findByIdAndUpdate(id, updates, { new: true }).lean<PlantType>();
 
     res.status(200).json({
       message: "Plant updated",

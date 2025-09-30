@@ -15,6 +15,7 @@ const plantSchema = new mongoose.Schema<PlantType>(
   },
   {
     timestamps: true,
+    strict: true,
   }
 );
 

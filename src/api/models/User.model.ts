@@ -6,11 +6,25 @@ const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admi
 
 const userSchema = new mongoose.Schema<UserType>(
   {
-    username: { type: String, required: true, unique: true, trim: true },
-    email: { type: String, required: true, unique: true, trim: true },
+    username: {
+      type: String,
+      required: [true, "Please provide a username"],
+      unique: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Please provide an email"],
+      validate: {
+        validator: (value: string) => /^\S+@\S+\.\S+$/.test(value),
+        message: "Email format is invalid",
+      },
+      unique: true,
+      trim: true,
+    },
     password: {
       type: String,
-      required: true,
+      required: [true, "Please provide a password"],
       trim: true,
       minlength: [8, "Password must contain at least 8 characters"],
       validate: [
@@ -40,29 +54,36 @@ const userSchema = new mongoose.Schema<UserType>(
         },
       ],
     },
-    img: { type: String, required: true, trim: true },
+    img: { type: String, required: false, trim: true },
     plant_care_skill_level: {
       type: String,
       enum: ["beginner", "intermediate", "advanced", "Demeter"],
-      required: true,
+      required: [true, "Please provide a valid plant care skill level: beginner, intermediate, advanced"],
     },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user", // User always as role user by default
-      required: true,
+      required: false,
       trim: true,
     },
     plants: [{ type: mongoose.Types.ObjectId, ref: "plants" }],
   },
   {
     timestamps: true,
+    strict: true,
   }
 );
 
 userSchema.pre("save", function (next) {
-  this.password = bcrypt.hashSync(this.password, 10);
-  next();
+  try {
+    if (this.isModified("password")) {
+      this.password = bcrypt.hashSync(this.password, 10);
+      next();
+    }
+  } catch (error) {
+    next(error as Error);
+  }
 });
 
 export const User = mongoose.model("users", userSchema, "users");

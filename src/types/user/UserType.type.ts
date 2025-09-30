@@ -1,3 +1,5 @@
+//? UserType is my mapping of the User mongoose document
+
 import { Types } from "mongoose";
 
 export interface UserType {
@@ -11,4 +13,7 @@ export interface UserType {
   plants: Types.ObjectId[];
 }
 
-export type NewUserType = Omit<UserType, "_id">;
+//? Type for the user format sent by the user in register request
+export type NewUserType = Omit<UserType, "_id" | "role">;
+//? Type for the 200 OK response after register and login
+export type PublicUserType = Omit<UserType, "role" | "password">;

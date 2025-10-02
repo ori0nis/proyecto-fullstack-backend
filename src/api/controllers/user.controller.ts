@@ -233,7 +233,7 @@ export const changePassword = async (
 // UPLOAD PROFILE PICTURE
 //? Works both for first upload and for edit
 export const uploadProfilePicture = async (
-  req: AuthRequest<{ id: string }, {}, { img: string }>,
+  req: AuthRequest<{ id: string }, {}, {}>,
   res: Response<UserResponseType<PublicUserType>>,
   next: NextFunction
 ) => {

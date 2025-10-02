@@ -9,7 +9,7 @@ interface UploadResult {
 }
 
 export const supabaseUpload = async (file: Express.Multer.File): Promise<UploadResult> => {
-  const filePath = `uploads/${uuid()}-${file.originalname}`;
+  const filePath = `users/${uuid()}-${file.originalname}`;
 
   const { error } = await supabase.storage.from("images").upload(filePath, file.buffer, {
     contentType: file.mimetype,

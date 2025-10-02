@@ -57,7 +57,7 @@ export const canEditUser = async (req: AuthRequest<{ id: string }>, res: Respons
     }
 
     if (requester._id.toString() === id || requester.role === "admin") {
-      if ("role" in req.body) delete req.body.role;
+      if (req.body && "role" in req.body) delete req.body.role;
 
       next();
     } else {

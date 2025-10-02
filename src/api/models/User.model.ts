@@ -54,7 +54,8 @@ const userSchema = new mongoose.Schema<UserType>(
         },
       ],
     },
-    img: { type: String, required: false, trim: true },
+    imgPath: { type: String, required: false, trim: true },
+    imgPublicUrl: { type: String, required: false, trim: true },
     plant_care_skill_level: {
       type: String,
       enum: ["beginner", "intermediate", "advanced", "Demeter"],

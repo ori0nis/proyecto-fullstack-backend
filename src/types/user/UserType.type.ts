@@ -7,7 +7,8 @@ export interface UserType {
   username: string;
   email: string;
   password: string;
-  img: string;
+  imgPath: string;
+  imgPublicUrl: string;
   plant_care_skill_level: string;
   role: string;
   plants: Types.ObjectId[];

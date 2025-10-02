@@ -1,4 +1,4 @@
-//? req.user is always double checked even after passing isAuth(), as a good practice
+//? req.user is guaranteed through isAuth()
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
@@ -14,6 +14,7 @@ import { User } from "../models/index.js";
 import { generateToken } from "../../utils/jwt/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
+import { supabase } from "../../config/index.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -22,18 +23,6 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = req.user;
-
-    if (!user) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
     const users = await User.find().populate("plants").lean<UserType[]>();
     const publicUsers = users.map(({ password, role, ...rest }) => rest) as PublicUserType[];
 
@@ -55,18 +44,6 @@ export const getUserById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = req.user;
-
-    if (!user) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
     const userInDatabase = await User.findById(id).populate("plants").lean<UserType>();
 
     if (!userInDatabase) {
@@ -96,21 +73,15 @@ export const registerUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { username, email, password, img, plant_care_skill_level, plants } = req.body;
-
+    const { username, email, password, plant_care_skill_level, plants } = req.body;
     // Role is enforced again to avoid overwrites
-    const user = new User({ username, email, password, img, plant_care_skill_level, plants, role: "user" });
-
-    if (req.file) {
-      const img = await supabaseUpload(req.file);
-      user.img = img;
-    }
+    const user = new User({ username, email, password, plant_care_skill_level, plants, role: "user" });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
     const savedUser = await (await user.save()).populate("plants");
     const userPosted = savedUser.toObject();
 
-    const {password: _password, role, ...publicUser} = userPosted;
+    const { password: _password, role, ...publicUser } = userPosted;
 
     res.status(201).json({
       message: "User created",
@@ -174,7 +145,6 @@ export const loginUser = async (
 };
 
 // EDIT USER
-// TODO: Check out img edition logic with supabase
 export const editUser = async (
   req: AuthRequest<{ id: string }, {}, Partial<NewUserType>>,
   res: Response<UserResponseType<PublicUserType>>,
@@ -182,19 +152,7 @@ export const editUser = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = req.user;
-
-    if (!user) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
-    const userInDatabase = await User.findById(id).populate("plants").lean<UserType>();
+    const userInDatabase = await User.findById(id);
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -208,9 +166,7 @@ export const editUser = async (
 
     // Role gets deleted if it's somehow sent in the body
     const updates = { ...req.body };
-    if ("role" in updates) {
-      delete updates.role;
-    }
+    if ("role" in updates) delete updates.role;
 
     const userUpdated = await User.findByIdAndUpdate(id, updates, { new: true }).populate("plants").lean<UserType>();
 
@@ -236,8 +192,130 @@ export const editUser = async (
   }
 };
 
+// CHANGE PASSWORD
+export const changePassword = async (
+  req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
+  res: Response<UserResponseType<PublicUserType>>,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const userUpdated = await User.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
+      .populate("plants")
+      .lean<UserType>();
+
+    if (!userUpdated) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { password, role, ...publicUser } = userUpdated;
+
+    res.status(200).json({
+      message: "Password successfully changed",
+      status: 200,
+      data: publicUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// UPLOAD PROFILE PICTURE
+//? Works both for first upload and for edit
+export const uploadProfilePicture = async (
+  req: AuthRequest<{ id: string }, {}, { img: string }>,
+  res: Response<UserResponseType<PublicUserType>>,
+  next: NextFunction
+) => {
+  try {
+    const profilePic = req.file;
+    const { id } = req.params;
+
+    if (!profilePic) {
+      res.status(400).json({
+        message: "No file uploaded",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    // Check for allowed types
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(profilePic.mimetype)) {
+      return res.status(400).json({
+        message: "Invalid file type. Please upload a JPEG or PNG.",
+        status: 400,
+        data: null,
+      });
+    }
+
+    // Maximum size: 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (profilePic.size > MAX_SIZE) {
+      return res.status(400).json({
+        message: "File too large. Max size is 5MB.",
+        status: 400,
+        data: null,
+      });
+    }
+
+    const { imgPath, publicUrl } = await supabaseUpload(profilePic);
+    const userInDatabase = await User.findById(id);
+
+    if (!userInDatabase) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    // If user already had an image (update option), we remove the old one from supabase
+    if (userInDatabase.imgPath) {
+      await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+    }
+
+    const userUpdated = await User.findByIdAndUpdate(id, { imgPath: imgPath, imgPublicUrl: publicUrl }, { new: true })
+      .populate("plants")
+      .lean<UserType>();
+
+    if (!userUpdated) {
+      res.status(500).json({
+        message: "Error updating profile picture",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { password, role, ...publicUser } = userUpdated;
+
+    res.status(200).json({
+      message: "Profile picture updated",
+      status: 200,
+      data: publicUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // DELETE USER
-// TODO: Img deletion util
 export const deleteUser = async (
   req: AuthRequest<{ id: string }>,
   res: Response<UserResponseType<PublicUserType>>,
@@ -245,17 +323,6 @@ export const deleteUser = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const user = req.user;
-
-    if (!user) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
 
     const userInDatabase = await User.findById(id).lean<UserType>();
 
@@ -281,6 +348,7 @@ export const deleteUser = async (
       return;
     }
 
+    if (userDeleted.imgPath) await supabase.storage.from("images").remove([userDeleted.imgPath]);
     const { password, role, ...publicUser } = userDeleted;
 
     res.status(200).json({

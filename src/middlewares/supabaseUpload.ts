@@ -3,7 +3,12 @@
 import { supabase } from "../config/index.js";
 import { v4 as uuid } from "uuid";
 
-export const supabaseUpload = async (file: Express.Multer.File): Promise<string> => {
+interface UploadResult {
+  imgPath: string;
+  publicUrl: string;
+}
+
+export const supabaseUpload = async (file: Express.Multer.File): Promise<UploadResult> => {
   const filePath = `uploads/${uuid()}-${file.originalname}`;
 
   const { error } = await supabase.storage.from("images").upload(filePath, file.buffer, {
@@ -14,5 +19,5 @@ export const supabaseUpload = async (file: Express.Multer.File): Promise<string>
 
   const { data } = supabase.storage.from("images").getPublicUrl(filePath);
 
-  return data.publicUrl;
+  return { imgPath: filePath, publicUrl: data.publicUrl };
 };

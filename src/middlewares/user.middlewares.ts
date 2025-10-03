@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUserType, UserResponseType, PublicUserType, UserType } from "../types/user/index.js";
+import { NewUserType, UserResponseType, PublicUserType } from "../types/user/index.js";
 import { User } from "../api/models/index.js";
-import { AuthRequest } from "../types/jwt/AuthRequest.type.js";
+import { AuthRequest } from "../types/jwt/index.js";
 
 //? Checks what the mongoose model can't (unique username and email)
 export const isUniqueUser = async (
@@ -40,8 +40,41 @@ export const isUniqueUser = async (
   }
 };
 
+//? Authorization
+export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const requester = req.user;
+
+    if (!requester) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    if (requester.role === "admin") {
+      next();
+    } else {
+      res.status(403).json({
+        message: "Forbidden. Admins only",
+        status: 403,
+        data: null,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 //? Allows users to update their own profile (except for role), and admins to update anyone
-export const canEditUser = async (req: AuthRequest<{ id: string }>, res: Response, next: NextFunction) => {
+export const canEditUser = async (
+  req: AuthRequest<{ id: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const requester = req.user;
     const { id } = req.params;
@@ -77,7 +110,7 @@ export const canChangePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
   res: Response<UserResponseType<PublicUserType>>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const user = req.user;
     const { oldPassword } = req.body;
@@ -122,7 +155,11 @@ export const canChangePassword = async (
 };
 
 //? Users can only delete own account, admin can delete anyone
-export const canDeleteUser = async (req: AuthRequest<{ id: string }>, res: Response, next: NextFunction) => {
+export const canDeleteUser = async (
+  req: AuthRequest<{ id: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const requester = req.user;
     const { id } = req.params;
@@ -152,4 +189,3 @@ export const canDeleteUser = async (req: AuthRequest<{ id: string }>, res: Respo
     next(error);
   }
 };
-

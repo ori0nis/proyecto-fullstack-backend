@@ -11,7 +11,7 @@ import {
   PublicUserType,
 } from "../../types/user/index.js";
 import { User } from "../models/index.js";
-import { generateToken } from "../../utils/jwt/index.js";
+import { generateToken } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
@@ -100,7 +100,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findOne({ email: req.body.email }).populate("plants");
+    const user = await User.findOne({ email: req.body.email }).populate("plants").lean<UserType>();
 
     if (!user) {
       res.status(401).json({
@@ -112,7 +112,7 @@ export const loginUser = async (
       return;
     }
 
-    const passwordMatches = bcrypt.compareSync(req.body.password, user.password);
+    const passwordMatches = await bcrypt.compare(req.body.password, user.password);
 
     if (!passwordMatches) {
       res.status(401).json({
@@ -129,7 +129,7 @@ export const loginUser = async (
       role: user.role,
     });
 
-    const { password, role, ...publicUser } = user.toObject();
+    const { password, role, ...publicUser } = user;
 
     res.status(200).json({
       message: "User logged in with token",
@@ -197,7 +197,7 @@ export const changePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
   res: Response<UserResponseType<PublicUserType>>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
@@ -251,27 +251,6 @@ export const uploadProfilePicture = async (
       return;
     }
 
-    // Check for allowed types
-    const allowedTypes = ["image/jpeg", "image/png"];
-    if (!allowedTypes.includes(profilePic.mimetype)) {
-      return res.status(400).json({
-        message: "Invalid file type. Please upload a JPEG or PNG.",
-        status: 400,
-        data: null,
-      });
-    }
-
-    // Maximum size: 5MB
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (profilePic.size > MAX_SIZE) {
-      return res.status(400).json({
-        message: "File too large. Max size is 5MB.",
-        status: 400,
-        data: null,
-      });
-    }
-
-    const { imgPath, publicUrl } = await supabaseUpload(profilePic);
     const userInDatabase = await User.findById(id);
 
     if (!userInDatabase) {
@@ -288,6 +267,32 @@ export const uploadProfilePicture = async (
     if (userInDatabase.imgPath) {
       await supabase.storage.from("images").remove([userInDatabase.imgPath]);
     }
+
+    // Check for allowed types
+    const allowedTypes = ["image/jpeg", "image/png"];
+    if (!allowedTypes.includes(profilePic.mimetype)) {
+      res.status(400).json({
+        message: "Invalid file type. Please upload a JPEG or PNG.",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    // Maximum size: 5MB
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (profilePic.size > MAX_SIZE) {
+      res.status(400).json({
+        message: "File too large. Max size is 5MB.",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { imgPath, publicUrl } = await supabaseUpload(profilePic);
 
     const userUpdated = await User.findByIdAndUpdate(id, { imgPath: imgPath, imgPublicUrl: publicUrl }, { new: true })
       .populate("plants")

@@ -6,8 +6,8 @@ export interface PlantType {
   _id: Types.ObjectId;
   scientific_name: string;
   common_name: string;
-  nickname: string;
-  img: string;
+  imgPath: string;
+  imgPublicUrl: string;
   type: "tropical" | "desert" | "temperate" | "alpine";
 }
 

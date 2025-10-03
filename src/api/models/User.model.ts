@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
 import { UserType } from "../../types/user/index.js";
 
@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema<UserType>(
       required: false,
       trim: true,
     },
-    plants: [{ type: mongoose.Types.ObjectId, ref: "plants", required: false }],
+    plants: [{ type: Types.ObjectId, ref: "userplants", required: false }],
   },
   {
     timestamps: true,

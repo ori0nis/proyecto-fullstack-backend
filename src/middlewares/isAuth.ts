@@ -1,6 +1,6 @@
 import { Response, NextFunction, RequestHandler } from "express";
 import { UserResponseType, UserType } from "../types/user/index.js";
-import { verifyToken } from "../utils/jwt/index.js";
+import { verifyToken } from "../utils/index.js";
 import { User } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
 

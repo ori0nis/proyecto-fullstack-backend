@@ -2,7 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import dotenv from "dotenv";
 import cors from "cors";
 import { mongooseConnection, supabase } from "./config/index.js";
-import { userRouter } from "./api/routes/index.js";
+import { plantRouter, userRouter } from "./api/routes/index.js";
 
 interface CustomError extends Error {
   status?: number;
@@ -36,6 +36,7 @@ app.use(cors());
 const router = express.Router();
 app.use("/", router);
 app.use("/users", userRouter);
+app.use("/plants", plantRouter);
 
 // Port listen
 app.listen(PORT, () => {

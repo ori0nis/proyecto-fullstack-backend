@@ -1,10 +1,10 @@
 //? req.user is always double checked even after passing isAuth(), as a good practice. Mongoose documents are returned with .lean() so that they're in plain object format and can be assigned as PlantType
 
-import { AuthImplicitGrantRedirectError } from "@supabase/supabase-js";
+import { supabase } from "../../config/supabaseClient.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
-import { NewPlantType, PlantResponse, PlantType, UserPlantType } from "../../types/plant/index.js";
-import { isValidScientificName } from "../../utils/index.js";
+import { NewPlantType, NewUserPlant, PlantResponse, PlantType, UserPlantType } from "../../types/plant/index.js";
+import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
 import { Plant, User, UserPlant } from "./../models/index.js";
 import { type Response, type NextFunction } from "express";
 
@@ -102,22 +102,11 @@ export const postNewPlant = async (
       return;
     }
 
-    const allowedTypes = ["image/jpeg", "image/png"];
-    
-    if (!allowedTypes.includes(plantImg.mimetype)) {
+    try {
+      await isAllowedImage(plantImg);
+    } catch (error) {
       res.status(400).json({
-        message: "Invalid file type. Please upload a JPEG or PNG.",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (plantImg.size > MAX_SIZE) {
-      res.status(400).json({
-        message: "File too large. Max size is 5MB.",
+        message: error instanceof Error ? error.message : "Invalid image",
         status: 400,
         data: null,
       });
@@ -168,7 +157,33 @@ export const addPlantToProfile = async (
       return;
     }
 
-    const userPlant = new UserPlant({ userId, plantId, nameByUser });
+    const plantImg = req.file;
+
+    if (!plantImg) {
+      res.status(400).json({
+        message: "No plant image uploaded",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    try {
+      await isAllowedImage(plantImg);
+    } catch (error) {
+      res.status(400).json({
+        message: error instanceof Error ? error.message : "Invalid image",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { imgPath, publicUrl } = await supabaseUpload(plantImg);
+
+    const userPlant = new UserPlant({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
     const savedUserPlant = await userPlant.save();
 
     await User.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
@@ -184,8 +199,6 @@ export const addPlantToProfile = async (
 };
 
 // EDIT PLANT (UNIVERSAL REPOSITORY)
-// TODO: Img edition
-//? Request type is only partial and of NewPlantType to avoid security concerns regarding _id
 export const editPlant = async (
   req: AuthRequest<{ id: string }, {}, Partial<NewPlantType>>,
   res: Response<PlantResponse<PlantType>>,
@@ -193,7 +206,7 @@ export const editPlant = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
 
     const plant = await Plant.findById(id);
 
@@ -207,10 +220,120 @@ export const editPlant = async (
       return;
     }
 
-    const plantUpdated = await Plant.findByIdAndUpdate(id, updates, { new: true }).lean<PlantType>();
+    const plantImg = req.file;
+    let imgPath = plant.imgPath;
+    let imgPublicUrl = plant.imgPublicUrl;
+
+    if (plantImg) {
+      try {
+        await isAllowedImage(plantImg);
+
+        const { error: deleteError } = await supabase.storage.from("images").remove([plant.imgPath]);
+
+        if (deleteError) {
+          res.status(500).json({
+            message: "Error deleting old image from Supabase",
+            status: 500,
+            data: null,
+          });
+
+          return;
+        }
+
+        const uploaded = await supabaseUpload(plantImg);
+        imgPath = uploaded.imgPath;
+        imgPublicUrl = uploaded.publicUrl;
+      } catch (error) {
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Invalid image",
+          status: 400,
+          data: null,
+        });
+
+        return;
+      }
+    }
+
+    const plantUpdated = await Plant.findByIdAndUpdate(
+      id,
+      { ...updates, imgPath, imgPublicUrl },
+      { new: true }
+    ).lean<PlantType>();
 
     res.status(200).json({
       message: "Plant updated",
+      status: 200,
+      data: plantUpdated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// EDIT USER PLANT
+export const editUserPlant = async (
+  req: AuthRequest<{ id: string }, {}, Partial<NewUserPlant>>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    const userPlant = req.userPlant;
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plantImg = req.file;
+    let imgPath = userPlant.imgPath;
+    let imgPublicUrl = userPlant.imgPublicUrl;
+
+    if (plantImg) {
+      try {
+        await isAllowedImage(plantImg);
+
+        const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
+
+        if (deleteError) {
+          res.status(500).json({
+            message: "Error deleting plant",
+            status: 500,
+            data: null,
+          });
+
+          return;
+        }
+
+        const uploaded = await supabaseUpload(plantImg);
+        imgPath = uploaded.imgPath;
+        imgPublicUrl = uploaded.publicUrl;
+      } catch (error) {
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Invalid image",
+          status: 400,
+          data: null,
+        });
+
+        return;
+      }
+    }
+
+    const plantUpdated = await UserPlant.findByIdAndUpdate(
+      id,
+      { ...updates, imgPath, imgPublicUrl },
+      { new: true }
+    ).lean<UserPlantType>();
+
+    res.status(200).json({
+      message: "Plant successfully updated",
       status: 200,
       data: plantUpdated,
     });
@@ -227,7 +350,6 @@ export const deletePlant = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-
     const plant = await Plant.findById(id);
 
     if (!plant) {
@@ -240,7 +362,83 @@ export const deletePlant = async (
       return;
     }
 
+    const { error: deleteError } = await supabase.storage.from("images").remove([plant.imgPath]);
+
+    if (deleteError) {
+      res.status(500).json({
+        message: "Error deleting image from Supabase",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
     const plantDeleted = await Plant.findByIdAndDelete(id).lean<PlantType>();
+
+    if (!plantDeleted) {
+      res.status(500).json({
+        message: "Error deleting plant",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Plant deleted",
+      status: 200,
+      data: plantDeleted,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE USER PLANT
+export const deleteUserPlant = async (
+  req: AuthRequest<{ id: string }>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const userPlant = await UserPlant.findById(id);
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
+
+    if (deleteError) {
+      res.status(500).json({
+        message: "Error deleting image from Supabase",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plantDeleted = await UserPlant.findByIdAndDelete(id).lean<UserPlantType>();
+
+    if (!plantDeleted) {
+      res.status(500).json({
+        message: "Error deleting plant",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
 
     res.status(200).json({
       message: "Plant deleted",

@@ -11,7 +11,7 @@ import {
   PublicUserType,
 } from "../../types/user/index.js";
 import { User } from "../models/index.js";
-import { generateToken } from "../../utils/index.js";
+import { generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
@@ -268,23 +268,11 @@ export const uploadProfilePicture = async (
       await supabase.storage.from("images").remove([userInDatabase.imgPath]);
     }
 
-    // Check for allowed types
-    const allowedTypes = ["image/jpeg", "image/png"];
-    if (!allowedTypes.includes(profilePic.mimetype)) {
+    try {
+      await isAllowedImage(profilePic);
+    } catch (error) {
       res.status(400).json({
-        message: "Invalid file type. Please upload a JPEG or PNG.",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    // Maximum size: 5MB
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (profilePic.size > MAX_SIZE) {
-      res.status(400).json({
-        message: "File too large. Max size is 5MB.",
+        message: error instanceof Error ? error.message : "Invalid image",
         status: 400,
         data: null,
       });
@@ -341,6 +329,18 @@ export const deleteUser = async (
       return;
     }
 
+    const { data, error } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+
+    if (error) {
+      res.status(500).json({
+        message: "Error deleting image from Supabase",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
     const userDeleted = await User.findByIdAndDelete(id).populate("plants").lean<UserType>();
 
     if (!userDeleted) {
@@ -353,7 +353,6 @@ export const deleteUser = async (
       return;
     }
 
-    if (userDeleted.imgPath) await supabase.storage.from("images").remove([userDeleted.imgPath]);
     const { password, role, ...publicUser } = userDeleted;
 
     res.status(200).json({

@@ -58,6 +58,51 @@ export const getPlantById = async (
   }
 };
 
+// GET PLANT BY SCIENTIFIC NAME
+export const getPlantByScientificName = async (
+  req: AuthRequest<{}, {}, {}, { scientific_name: string }>,
+  res: Response<PlantResponse<PlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { scientific_name } = req.query;
+
+    if (!scientific_name || scientific_name.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid scientific name",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const normalizedName = scientific_name.trim().toLowerCase();
+
+    const plant = await Plant.findOne({ scientific_name: normalizedName }).lean<PlantType>();
+
+    if (!plant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Plant found",
+      status: 200,
+      data: plant,
+    });
+
+    return;
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST NEW PLANT (UNIVERSAL REPOSITORY)
 export const postNewPlant = async (
   req: AuthRequest<{}, {}, NewPlantType>,

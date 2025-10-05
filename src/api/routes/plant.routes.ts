@@ -20,7 +20,6 @@ import { upload } from "../../config/index.js";
 
 export const plantRouter = express.Router();
 
-//TODO: IMG
 plantRouter.get("/all-plants", isAuth, getAllPlants);
 plantRouter.get("/plant/:id", isAuth, getPlantById);
 plantRouter.post("/new-plant", isAuth, upload.single("imgPath"), postNewPlant);

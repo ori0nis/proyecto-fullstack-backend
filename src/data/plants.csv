@@ -1,0 +1,108 @@
+scientific_name,common_name,imgPath,imgPublicUrl,type
+Monstera deliciosa,Swiss Cheese Plant,1-monstera-deliciosa.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/1-monstera-deliciosa.jpg,tropical
+Dieffenbachia seguine,Dumb Cane,2-dieffenbachia-seguine.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/2-dieffenbachia-seguine.jpg,tropical
+Ficus lyrata,Fiddle Leaf Fig,3-ficus-lyrata.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/3-ficus-lyrata.png,tropical
+Aloe vera,Aloe Vera,4-aloe-vera.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/4-aloe-vera.png,desert
+Echinocactus grusonii,Golden Barrel Cactus,5-echinocactus-grusonii.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/5-echinocactus-grusonii.png,desert
+Nymphaea caerulea,Blue Lotus,6-nymphaea-caerulea.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/6-nymphaea-caerulea.jpg,aquatic
+Victoria amazonica,Amazon Water Lily,7-victoria-amazonica.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/7-victoria-amazonica.jpg,aquatic
+Acer palmatum,Japanese Maple,8-acer-palmatum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/8-acer-palmatum.png,temperate
+Lavandula angustifolia,Lavender,9-lavandula-angustifolia.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/9-lavandula-angustifolia.jpg,temperate
+Papaver somniferum,Opium Poppy,10-papaver-somniferum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/10-papaver-somniferum.png,temperate
+Edelweiss leontopodium alpinum,Edelweiss,11-edelweiss-leontopodium-alpinum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/11-edelweiss-leontopodium-alpinum.png,alpine
+Gentiana acaulis,Stemless Gentian,12-gentiana-acaulis.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/12-gentiana-acaulis.png,alpine
+Rosa gallica,French Rose,13-rosa-gallica.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/13-rosa-gallica.jpg,temperate
+Tillandsia usneoides,Spanish Moss,14-tillandsia-usneoides.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/14-tillandsia-usneoides.jpg,tropical
+Hibiscus rosa-sinensis,Hibiscus,15-hibiscus-rosa-sinensis.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/15-hibiscus-rosa-sinensis.JPG,tropical
+Opuntia ficus-indica,Prickly Pear Cactus,16-opuntia-ficus-indica.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/16-opuntia-ficus-indica.png,desert
+Nepenthes rajah,Giant Pitcher Plant,17-nepenthes-rajah.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/17-nepenthes-rajah.jpg,tropical
+Cyperus papyrus,Papyrus,18-cyperus-papyrus.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/18-cyperus-papyrus.jpg,aquatic
+Sedum morganianum,Burro's Tail,19-sedum-morganianum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/19-sedum-morganianum.jpg,desert
+Trifolium repens,White Clover,20-trifolium-repens.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/20-trifolium-repens.jpg,temperate
+Strelitzia reginae,Bird of Paradise,21-strelitzia-reginae.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/21-strelitzia-reginae.jpg,tropical
+Epipremnum aureum,Pothos,22-epipremnum-aureum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/22-epipremnum-aureum.jpg,tropical
+Hedera helix,English Ivy,23-hedera-helix.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/23-hedera-helix.png,temperate
+Ranunculus glacialis,Glacier Buttercup,24-ranunculus-glacialis.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/24-ranunculus-glacialis.jpg,alpine
+Ferocactus pilosus,Mexican Lime Cactus,25-ferocactus-pilosus.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/25-ferocactus-pilosus.png,desert
+Philodendron hederaceum,Heartleaf Philodendron,26-philodendron-hederaceum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/26-philodendron-hederaceum.jpg,tropical
+Sansevieria trifasciata,Snake Plant,27-sansevieria-trifasciata.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/27-sansevieria-trifasciata.jpg,desert
+Calathea orbifolia,Orbifolia Prayer Plant,28-calathea-orbifolia.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/28-calathea-orbifolia.png,tropical
+Echeveria elegans,Mexican Snowball,29-echeveria-elegans.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/29-echeveria-elegans.png,desert
+Betula pendula,Silver Birch,30-betula-pendula.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/30-betula-pendula.png,temperate
+Saxifraga oppositifolia,Purple Saxifrage,31-saxifraga-oppositifolia.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/31-saxifraga-oppositifolia.jpg,alpine
+Anthurium andraeanum,Flamingo Lily,32-anthurium-andraeanum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/32-anthurium-andraeanum.png,tropical
+Agave americana,Century Plant,33-agave-americana.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/33-agave-americana.png,desert
+Quercus robur,English Oak,34-quercus-robur.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/34-quercus-robur.png,temperate
+Androsace alpina,Alpine Rock Jasmine,35-androsace-alpina.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/35-androsace-alpina.png,alpine
+Zamioculcas zamiifolia,ZZ Plant,36-zamioculcas-zamiifolia.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/36-zamioculcas-zamiifolia.png,tropical
+Crassula ovata,Jade Plant,37-crassula-ovata.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/37-crassula-ovata.png,desert
+Aesculus hippocastanum,Horse Chestnut,38-aesculus-hippocastanum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/38-aesculus-hippocastanum.png,temperate
+Dryas octopetala,Mountain Avens,39-dryas-octopetala.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/39-dryas-octopetala.jpg,alpine
+Spathiphyllum wallisii,Peace Lily,40-spathiphyllum-wallisii.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/40-spathiphyllum-wallisii.png,tropical
+Haworthia attenuata,Zebra Plant,41-haworthia-attenuata.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/41-haworthia-attenuata.png,desert
+Fagus sylvatica,European Beech,42-fagus-sylvatica.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/42-fagus-sylvatica.jpg,temperate
+Campanula alpina,Alpine Bellflower,43-campanula-alpina.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/43-campanula-alpina.jpg,alpine
+Dracaena marginata,Madagascar Dragon Tree,44-dracaena-marginata.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/44-dracaena-marginata.jpg,tropical
+Kalanchoe blossfeldiana,Flaming Katy,45-kalanchoe-blossfeldiana.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/45-kalanchoe-blossfeldiana.png,desert
+Tilia cordata,Small-leaved Lime,46-tilia-cordata.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/46-tilia-cordata.jpg,temperate
+Gentiana verna,Spring Gentian,47-gentiana-verna.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/47-gentiana-verna.jpg,alpine
+Chlorophytum comosum,Spider Plant,48-chlorophytum-comosum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/48-chlorophytum-comosum.jpg,tropical
+Sempervivum tectorum,Common Houseleek,49-sempervivum-tectorum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/49-sempervivum-tectorum.png,desert
+Acer pseudoplatanus,Sycamore Maple,50-acer-pseudoplatanus.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/50-acer-pseudoplatanus.jpg,temperate
+Primula auricula,Auricula Primrose,51-primula-auricula.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/51-primula-auricula.png,alpine
+Ficus elastica,Rubber Plant,52-ficus-elastica.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/52-ficus-elastica.jpg,tropical
+Mammillaria elongata,Ladyfinger Cactus,53-mammillaria-elongata.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/53-mammillaria-elongata.jpeg,desert
+Castanea sativa,Sweet Chestnut,54-castanea-sativa.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/54-castanea-sativa.jpg,temperate
+Saxifraga paniculata,Livelong Saxifrage,55-saxifraga-paniculata.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/55-saxifraga-paniculata.jpg,alpine
+Schefflera arboricola,Dwarf Umbrella Tree,56-schefflera-arboricola.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/56-schefflera-arboricola.png,tropical
+Lithops spp,Living Stones,57-lithops-spp.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/57-lithops-spp.png,desert
+Corylus avellana,Common Hazel,58-corylus-avellana.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/58-corylus-avellana.jpg,temperate
+Rhododendron ferrugineum,Alpenrose,59-rhododendron-ferrugineum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/59-rhododendron-ferrugineum.png,alpine
+Maranta leuconeura,Prayer Plant,60-maranta-leuconeura.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/60-maranta-leuconeura.jpg,tropical
+Ariocarpus fissuratus,Living Rock Cactus,61-ariocarpus-fissuratus.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/61-ariocarpus-fissuratus.png,desert
+Sorbus aucuparia,Rowan,62-sorbus-aucuparia.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/62-sorbus-aucuparia.jpg,temperate
+Soldanella alpina,Alpine Snowbell,63-soldanella-alpina.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/63-soldanella-alpina.jpg,alpine
+Peperomia obtusifolia,Baby Rubber Plant,64-peperomia-obtusifolia.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/64-peperomia-obtusifolia.jpg,tropical
+Astrophytum asterias,Sand Dollar Cactus,65-astrophytum-asterias.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/65-astrophytum-asterias.png,desert
+Ulmus glabra,Wych Elm,66-ulmus-glabra.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/66-ulmus-glabra.jpg,temperate
+Leontopodium nivale,Alpine Edelweiss,67-brugmansia-aurea.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/67-brugmansia-aurea.jpg,alpine
+Codiaeum variegatum,Croton,68-codiaeum-variegatum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/68-codiaeum-variegatum.jpg,tropical
+Fouquieria splendens,Ocotillo,69-fouquieria-splendens.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/69-fouquieria-splendens.jpg,desert
+Juglans regia,Persian Walnut,70-juglans-regia.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/70-juglans-regia.jpg,temperate
+Pulsatilla alpina,Alpine Pasqueflower,71-pulsatilla-alpina.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/71-pulsatilla-alpina.jpg,alpine
+Aspidistra elatior,Cast Iron Plant,72-aspidistra-elatior.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/72-aspidistra-elatior.jpg,tropical
+Yucca filamentosa,Adam's Needle,73-yucca-filamentosa.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/73-yucca-filamentosa.png,desert
+Malus domestica,Apple Tree,74-malus-domestica.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/74-malus-domestica.jpg,temperate
+Eritrichium nanum,King of the Alps,75-eritrichium-nanum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/75-eritrichium-nanum.jpg,alpine
+Caladium bicolor,Angel Wings,76-caladium-bicolor.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/76-caladium-bicolor.jpg,tropical
+Carnegiea gigantea,Saguaro Cactus,77-carnegiea-gigantea.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/77-carnegiea-gigantea.jpg,desert
+Prunus avium,Wild Cherry,78-prunus-avium.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/78-prunus-avium.jpg,temperate
+Silene acaulis,Moss Campion,79-silene-acaulis.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/79-silene-acaulis.jpg,alpine
+Alocasia amazonica,African Mask Plant,80-alocasia-amazonica.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/80-alocasia-amazonica.png,tropical
+Mammillaria hahniana,Old Lady Cactus,81-mammillaria-hahniana.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/81-mammillaria-hahniana.jpg,desert
+Carpinus betulus,European Hornbeam,82-carpinus-betulus.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/82-carpinus-betulus.jpg,temperate
+Draba aizoides,Yellow Whitlow Grass,83-draba-aizoides.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/83-draba-aizoides.png,alpine
+Syngonium podophyllum,Arrowhead Plant,84-syngonium-podophyllum.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/84-syngonium-podophyllum.png,tropical
+Lophophora williamsii,Peyote,85-lophophora-williamsii.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/85-lophophora-williamsii.jpg,desert
+Fraxinus excelsior,European Ash,86-fraxinus-excelsior.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/86-fraxinus-excelsior.jpg,temperate
+Saxifraga cernua,Drooping Saxifrage,87-saxifraga-cernua.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/87-saxifraga-cernua.jpg,alpine
+Ctenanthe burle-marxii,Fishbone Prayer Plant,88-ctenanthe-burle-marxii.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/88-ctenanthe-burle-marxii.png,tropical
+Stenocereus thurberi,Organ Pipe Cactus,89-stenocereus-thurberi.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/89-stenocereus-thurberi.png,desert
+Populus tremula,European Aspen,90-populus-tremula.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/90-populus-tremula.jpg,temperate
+Androsace villosa,Hairy Rock Jasmine,91-androsace-villosa.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/91-androsace-villosa.jpg,alpine
+Pilea peperomioides,Chinese Money Plant,92-pilea-peperomioides.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/92-pilea-peperomioides.jpg,tropical
+Ferocactus wislizeni,Fishhook Barrel Cactus,93-ferocactus-wislizeni.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/93-ferocactus-wislizeni.png,desert
+Salix caprea,Goat Willow,94-salix-caprea.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/94-salix-caprea.jpg,temperate
+Ranunculus alpestris,Alpine Buttercup,95-ranunculus-alpestris.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/95-ranunculus-alpestris.jpg,alpine
+Begonia maculata,Polka Dot Begonia,96-begonia-maculata.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/96-begonia-maculata.png,tropical
+Mammillaria spinosissima,Red-headed Irishman,97-mammillaria-spinosissima.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/97-mammillaria-spinosissima.png,desert
+Alnus glutinosa,Common Alder,98-alnus-glutinosa.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/98-alnus-glutinosa.jpg,temperate
+Gentiana clusii,Trumpet Gentian,99-gentiana-clusii.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/99-gentiana-clusii.png,alpine
+Philodendron gloriosum,Glorious Philodendron,100-philodendron-gloriosum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/100-philodendron-gloriosum.jpg,tropical
+Thelocactus bicolor,Glory of Texas,101-thelocactus-bicolor.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/101-thelocactus-bicolor.png,desert
+Crataegus monogyna,Common Hawthorn,102-crataegus-monogyna.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/102-crataegus-monogyna.jpg,temperate
+Phyteuma hemisphaericum,Alpine Rampion,103-phyteuma-hemisphaericum.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/103-phyteuma-hemisphaericum.jpg,alpine
+Monstera adansonii,Swiss Cheese Vine,104-monstera-adansonii.png,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/104-monstera-adansonii.png,tropical
+Gymnocalycium mihanovichii,Moon Cactus,105-gymnocalycium-mihanovichii.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/105-gymnocalycium-mihanovichii.jpg,desert
+Ilex aquifolium,European Holly,106-ilex-aquifolium.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/106-ilex-aquifolium.jpg,temperate
+Primula farinosa,Bird's-eye Primrose,107-primula-farinosa.jpg,https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/plants/107-primula-farinosa.jpg,alpine

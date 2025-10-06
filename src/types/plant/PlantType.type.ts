@@ -8,7 +8,7 @@ export interface PlantType {
   common_name: string;
   imgPath: string;
   imgPublicUrl: string;
-  type: "tropical" | "desert" | "temperate" | "alpine";
+  type: "tropical" | "desert" | "temperate" | "alpine" | "aquatic";
 }
 
 export type NewPlantType = Omit<PlantType, "_id">;

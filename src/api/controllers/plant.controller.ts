@@ -185,7 +185,7 @@ export const addPlantToProfile = async (
   req: AuthRequest<{}, {}, { plantId: string; nameByUser: string }>,
   res: Response<PlantResponse<UserPlantType>>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { plantId, nameByUser } = req.body;
     const userId = req.user?._id;
@@ -446,7 +446,7 @@ export const deleteUserPlant = async (
   req: AuthRequest<{ id: string }>,
   res: Response<PlantResponse<UserPlantType>>,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { id } = req.params;
     const userPlant = await UserPlant.findById(id);

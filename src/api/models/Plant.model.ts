@@ -11,7 +11,7 @@ const plantSchema = new mongoose.Schema<PlantType>(
     imgPublicUrl: { type: String, required: true, trim: true },
     type: {
       type: String,
-      enum: ["tropical", "desert", "temperate", "alpine"],
+      enum: ["tropical", "desert", "temperate", "alpine", "aquatic"],
       required: [true, "Please provide a valid plant type: tropical, desert, temperate, alpine"],
     },
   },

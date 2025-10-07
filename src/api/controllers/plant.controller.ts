@@ -1,12 +1,12 @@
 //? req.user is always double checked even after passing isAuth(), as a good practice. Mongoose documents are returned with .lean() so that they're in plain object format and can be assigned as PlantType
 
-import { supabase } from "../../config/supabaseClient.js";
+import { type Response, type NextFunction } from "express";
+import { supabase } from "../../config/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { NewPlantType, NewUserPlant, PlantResponse, PlantType, UserPlantType } from "../../types/plant/index.js";
 import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
 import { Plant, User, UserPlant } from "./../models/index.js";
-import { type Response, type NextFunction } from "express";
 
 // GET ALL PLANTS
 export const getAllPlants = async (
@@ -46,22 +46,22 @@ export const getPlantById = async (
       });
 
       return;
-    } else {
-      res.status(200).json({
-        message: "Plant found",
-        status: 200,
-        data: plant,
-      });
     }
+
+    res.status(200).json({
+      message: "Plant found",
+      status: 200,
+      data: plant,
+    });
   } catch (error) {
     next(error);
   }
 };
 
 // GET PLANT BY SCIENTIFIC NAME
-export const getPlantByScientificName = async (
+export const getPlantsByScientificName = async (
   req: AuthRequest<{}, {}, {}, { scientific_name: string }>,
-  res: Response<PlantResponse<PlantType>>,
+  res: Response<PlantResponse<PlantType[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -77,13 +77,13 @@ export const getPlantByScientificName = async (
       return;
     }
 
-    const normalizedName = scientific_name.trim().toLowerCase();
+    const plants = await Plant.find({
+      scientific_name: { $regex: new RegExp(scientific_name.trim(), "i") },
+    }).lean<PlantType[]>();
 
-    const plant = await Plant.findOne({ scientific_name: normalizedName }).lean<PlantType>();
-
-    if (!plant) {
+    if (!plants.length) {
       res.status(404).json({
-        message: "Plant not found",
+        message: "No plants found",
         status: 404,
         data: null,
       });
@@ -92,12 +92,95 @@ export const getPlantByScientificName = async (
     }
 
     res.status(200).json({
-      message: "Plant found",
+      message: "Plants found",
       status: 200,
-      data: plant,
+      data: plants,
     });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    return;
+// GET PLANT BY TYPE
+export const getPlantsByType = async (
+  req: AuthRequest<{}, {}, {}, { type: string }>,
+  res: Response<PlantResponse<PlantType[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { type } = req.query;
+    const allowedTypes = ["tropical", "desert", "temperate", "alpine", "aquatic"];
+
+    if (!type || type.trim() === "" || !allowedTypes.includes(type.toLowerCase())) {
+      res.status(400).json({
+        message: "Please provide a valid plant type: tropical, desert, temperate, alpine, aquatic",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plants = await Plant.find({ type: type.toLowerCase() }).lean<PlantType[]>();
+
+    if (!plants.length) {
+      res.status(404).json({
+        message: "No plants found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Plants found",
+      status: 200,
+      data: plants,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET PLANT BY COMMON NAME
+export const getPlantsByCommonName = async (
+  req: AuthRequest<{}, {}, {}, { common_name: string }>,
+  res: Response<PlantResponse<PlantType[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { common_name } = req.query;
+
+    if (!common_name || common_name.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid common name",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plants = await Plant.find({
+      common_name: { $regex: new RegExp(common_name.trim(), "i") },
+    }).lean<PlantType[]>();
+
+    if (!plants.length) {
+      res.status(404).json({
+        message: "No plants found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Plants found",
+      status: 200,
+      data: plants,
+    });
   } catch (error) {
     next(error);
   }
@@ -182,13 +265,13 @@ export const postNewPlant = async (
 
 // ADD NEW PLANT TO USER PROFILE
 export const addPlantToProfile = async (
-  req: AuthRequest<{}, {}, { plantId: string; nameByUser: string }>,
+  req: AuthRequest<{ userId: string }, {}, { plantId: string; nameByUser: string }>,
   res: Response<PlantResponse<UserPlantType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { plantId, nameByUser } = req.body;
-    const userId = req.user?._id;
+    const { userId } = req.params;
 
     const plantInRepository = await Plant.findById(plantId);
 
@@ -317,12 +400,12 @@ export const editPlant = async (
 
 // EDIT USER PLANT
 export const editUserPlant = async (
-  req: AuthRequest<{ id: string }, {}, Partial<NewUserPlant>>,
+  req: AuthRequest<{ userId: string; plantId: string }, {}, Partial<NewUserPlant>>,
   res: Response<PlantResponse<UserPlantType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { plantId } = req.params;
     const updates = { ...req.body };
 
     const userPlant = req.userPlant;
@@ -372,7 +455,7 @@ export const editUserPlant = async (
     }
 
     const plantUpdated = await UserPlant.findByIdAndUpdate(
-      id,
+      plantId,
       { ...updates, imgPath, imgPublicUrl },
       { new: true }
     ).lean<UserPlantType>();
@@ -443,13 +526,13 @@ export const deletePlant = async (
 
 // DELETE USER PLANT
 export const deleteUserPlant = async (
-  req: AuthRequest<{ id: string }>,
+  req: AuthRequest<{ userId: string; plantId: string }>,
   res: Response<PlantResponse<UserPlantType>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const userPlant = await UserPlant.findById(id);
+    const { plantId } = req.params;
+    const userPlant = await UserPlant.findById(plantId);
 
     if (!userPlant) {
       res.status(404).json({
@@ -473,7 +556,7 @@ export const deleteUserPlant = async (
       return;
     }
 
-    const plantDeleted = await UserPlant.findByIdAndDelete(id).lean<UserPlantType>();
+    const plantDeleted = await UserPlant.findByIdAndDelete(plantId).lean<UserPlantType>();
 
     if (!plantDeleted) {
       res.status(500).json({
@@ -484,6 +567,8 @@ export const deleteUserPlant = async (
 
       return;
     }
+
+    await User.findByIdAndUpdate(userPlant.userId, { $pull: { plants: plantDeleted.plantId } });
 
     res.status(200).json({
       message: "Plant deleted",

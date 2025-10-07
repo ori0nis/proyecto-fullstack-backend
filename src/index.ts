@@ -34,6 +34,9 @@ app.use(cors());
 
 // Router and endpoints
 const router = express.Router();
+router.get("/", (req, res, next) => {
+  res.send("🌱 Welcome to the MyPlants.io API!");
+});
 app.use("/", router);
 app.use("/users", userRouter);
 app.use("/plants", plantRouter);

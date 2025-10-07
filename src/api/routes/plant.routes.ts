@@ -26,9 +26,9 @@ export const plantRouter = express.Router();
 
 plantRouter.get("/all-plants", isAuth, getAllPlants);
 plantRouter.get("/plant/:id", isAuth, getPlantById);
-plantRouter.get("/scientific-name", isAuth, getPlantsByScientificName);
-plantRouter.get("/common-name", isAuth, getPlantsByCommonName);
-plantRouter.get("/type", isAuth, getPlantsByType);
+plantRouter.get("/search/scientific-name", isAuth, getPlantsByScientificName);
+plantRouter.get("/search/common-name", isAuth, getPlantsByCommonName);
+plantRouter.get("/search/type", isAuth, getPlantsByType);
 plantRouter.post("/new-plant", isAuth, upload.single("imgPath"), postNewPlant);
 plantRouter.post("/user/:userId/new-plant", isAuth, canAddUserPlant, upload.single("imgPath"), addPlantToProfile);
 plantRouter.put("/plant/:id", isAuth, isAdmin, canEditOrDeleteRepoPlant, upload.single("imgPath"), editPlant);

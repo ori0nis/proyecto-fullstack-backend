@@ -9,18 +9,18 @@ const seedPlants = async () => {
   try {
     const DB_URL = process.env.DB_URL;
 
-    if(!DB_URL) throw new Error("DB_URL doesn't exist in .env");
+    if (!DB_URL) throw new Error("DB_URL doesn't exist in .env");
 
     await mongoose.connect(DB_URL);
     console.log("✅ Connected to DB");
 
-    await Plant.collection.drop(); 
+    await Plant.collection.drop();
     console.log("🧹 Cleared existing plants");
 
     await Plant.insertMany(plants);
     console.log("🌱 Plants successfully inserted!");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "❌ Couldn't complete the database seed"
+    const message = error instanceof Error ? error.message : "❌ Couldn't complete the database seed";
     console.error(message);
   } finally {
     await mongoose.disconnect();

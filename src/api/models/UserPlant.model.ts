@@ -1,9 +1,9 @@
 //? Plants that users have in their profiles. Taken from the Plant model
 
 import mongoose, { Types } from "mongoose";
-import { UserPlantType } from "../../types/plant/index.js";
+import { UserPlant } from "../../types/plant/index.js";
 
-const userPlantSchema = new mongoose.Schema<UserPlantType>(
+const userPlantSchema = new mongoose.Schema<UserPlant>(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
     plantId: { type: mongoose.Schema.Types.ObjectId, ref: "plants" },
@@ -17,4 +17,4 @@ const userPlantSchema = new mongoose.Schema<UserPlantType>(
   }
 );
 
-export const UserPlant = mongoose.model("userplants", userPlantSchema, "userplants");
+export const UserPlantModel = mongoose.model("userplants", userPlantSchema, "userplants");

@@ -10,12 +10,12 @@ import {
   LoginUserType,
   PublicUser,
 } from "../../types/user/index.js";
-import { PlantModel, UserModel, UserPlant } from "../models/index.js";
+import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
-import { NewUserPlant, PlantResponse, UserPlantType } from "../../types/plant/index.js";
+import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -312,7 +312,7 @@ export const uploadProfilePicture = async (
 // ADD NEW PLANT TO USER PROFILE
 export const addPlantToProfile = async (
   req: AuthRequest<{}, {}, { plantId: string; nameByUser: string }>,
-  res: Response<PlantResponse<UserPlantType>>,
+  res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -366,7 +366,7 @@ export const addPlantToProfile = async (
 
     const { imgPath, publicUrl } = await supabaseUpload(plantImg);
 
-    const userPlant = new UserPlant({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
+    const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
     const savedUserPlant = await userPlant.save();
 
     await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
@@ -384,7 +384,7 @@ export const addPlantToProfile = async (
 // EDIT USER PLANT
 export const editUserPlant = async (
   req: AuthRequest<{ plantId: string }, {}, Partial<NewUserPlant>>,
-  res: Response<PlantResponse<UserPlantType>>,
+  res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -437,11 +437,11 @@ export const editUserPlant = async (
       }
     }
 
-    const plantUpdated = await UserPlant.findByIdAndUpdate(
+    const plantUpdated = await UserPlantModel.findByIdAndUpdate(
       plantId,
       { ...updates, imgPath, imgPublicUrl },
       { new: true }
-    ).lean<UserPlantType>();
+    ).lean<UserPlant>();
 
     res.status(200).json({
       message: "Plant successfully updated",
@@ -456,7 +456,7 @@ export const editUserPlant = async (
 // DELETE USER PLANT
 export const deleteUserPlant = async (
   req: AuthRequest<{ plantId: string }>,
-  res: Response<PlantResponse<UserPlantType>>,
+  res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -485,7 +485,7 @@ export const deleteUserPlant = async (
       return;
     }
 
-    const plantDeleted = await UserPlant.findByIdAndDelete(plantId).lean<UserPlantType>();
+    const plantDeleted = await UserPlantModel.findByIdAndDelete(plantId).lean<UserPlant>();
 
     if (!plantDeleted) {
       res.status(500).json({

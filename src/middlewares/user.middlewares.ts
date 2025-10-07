@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
 import { NewUser, UserResponseType, PublicUser } from "../types/user/index.js";
-import { UserModel, UserPlant } from "../api/models/index.js";
+import { UserModel, UserPlantModel } from "../api/models/index.js";
 import { AuthRequest } from "../types/jwt/index.js";
-import { NewUserPlant, PlantResponse, UserPlantType } from "../types/plant/index.js";
+import { NewUserPlant, PlantResponse, UserPlant } from "../types/plant/index.js";
 
 //? Checks what the mongoose model can't (unique username and email)
 export const isUniqueUser = async (
@@ -158,7 +158,7 @@ export const canChangePassword = async (
 //? Users can only edit their plants, admin can edit anyone
 export const canEditUserPlant = async (
   req: AuthRequest<{ plantId: string }, {}, Partial<NewUserPlant>>,
-  res: Response<PlantResponse<UserPlantType>>,
+  res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -175,7 +175,7 @@ export const canEditUserPlant = async (
       return;
     }
 
-    const userPlant = await UserPlant.findById(plantId);
+    const userPlant = await UserPlantModel.findById(plantId);
 
     if (!userPlant) {
       res.status(404).json({
@@ -225,7 +225,7 @@ export const canDeleteUserPlant = async (
       return;
     }
 
-    const userPlant = await UserPlant.findById(plantId);
+    const userPlant = await UserPlantModel.findById(plantId);
 
     if (!userPlant) {
       res.status(404).json({

@@ -4,9 +4,9 @@ import { type Response, type NextFunction } from "express";
 import { supabase } from "../../config/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
-import { NewPlantType, NewUserPlant, PlantResponse, Plant, UserPlantType } from "../../types/plant/index.js";
+import { NewPlantType, PlantResponse, Plant } from "../../types/plant/index.js";
 import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
-import { PlantModel, UserModel, UserPlant } from "./../models/index.js";
+import { PlantModel } from "./../models/index.js";
 
 // GET ALL PLANTS
 export const getAllPlants = async (

@@ -1,18 +1,19 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUserType, UserResponseType, PublicUserType } from "../types/user/index.js";
-import { User } from "../api/models/index.js";
+import { NewUser, UserResponseType, PublicUser } from "../types/user/index.js";
+import { UserModel, UserPlant } from "../api/models/index.js";
 import { AuthRequest } from "../types/jwt/index.js";
+import { NewUserPlant, PlantResponse, UserPlantType } from "../types/plant/index.js";
 
 //? Checks what the mongoose model can't (unique username and email)
 export const isUniqueUser = async (
-  req: Request<{}, {}, NewUserType>,
-  res: Response<UserResponseType<PublicUserType>>,
+  req: Request<{}, {}, NewUser>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userExists = await User.findOne({ email: req.body.email });
-    const usernameTaken = await User.findOne({ username: req.body.username });
+    const userExists = await UserModel.findOne({ email: req.body.email });
+    const usernameTaken = await UserModel.findOne({ username: req.body.username });
 
     if (userExists) {
       res.status(409).json({
@@ -108,7 +109,7 @@ export const canEditUser = async (
 //? Not even admin can change other users' passwords, that's saved for direct DB handling
 export const canChangePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
-  res: Response<UserResponseType<PublicUserType>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -147,6 +148,106 @@ export const canChangePassword = async (
 
       return;
     }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+//? Users can only edit their plants, admin can edit anyone
+export const canEditUserPlant = async (
+  req: AuthRequest<{ plantId: string }, {}, Partial<NewUserPlant>>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { plantId } = req.params;
+    const requester = req.user;
+
+    if (!requester) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userPlant = await UserPlant.findById(plantId);
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    if (requester._id.toString() !== userPlant.userId.toString() && requester.role !== "admin") {
+      res.status(403).json({
+        message: "You can't edit other user's plants",
+        status: 403,
+        data: null,
+      });
+
+      return;
+    }
+
+    req.userPlant = userPlant;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+//? Users can only delete their own plants, admins can delete anyone
+export const canDeleteUserPlant = async (
+  req: AuthRequest<{ plantId: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { plantId } = req.params;
+    const requester = req.user;
+
+    if (!requester) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userPlant = await UserPlant.findById(plantId);
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    if (requester._id.toString() !== userPlant.userId.toString() && requester.role !== "admin") {
+      res.status(403).json({
+        message: "You can't delete other user's plants",
+        status: 403,
+        data: null,
+      });
+
+      return;
+    }
+
+    req.userPlant = userPlant;
 
     next();
   } catch (error) {

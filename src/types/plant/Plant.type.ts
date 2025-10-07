@@ -2,7 +2,7 @@
 
 import { Types } from "mongoose";
 
-export interface PlantType {
+export interface Plant {
   _id: Types.ObjectId;
   scientific_name: string;
   common_name: string;
@@ -11,4 +11,4 @@ export interface PlantType {
   type: "tropical" | "desert" | "temperate" | "alpine" | "aquatic";
 }
 
-export type NewPlantType = Omit<PlantType, "_id">;
+export type NewPlantType = Omit<Plant, "_id">;

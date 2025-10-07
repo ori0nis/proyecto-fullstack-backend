@@ -1,10 +1,10 @@
 import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
-import { UserType } from "../../types/user/index.js";
+import { User } from "../../types/user/index.js";
 
 const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admin", "user", "login"];
 
-const userSchema = new mongoose.Schema<UserType>(
+const userSchema = new mongoose.Schema<User>(
   {
     username: {
       type: String,
@@ -87,4 +87,4 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-export const User = mongoose.model("users", userSchema, "users");
+export const UserModel = mongoose.model("users", userSchema, "users");

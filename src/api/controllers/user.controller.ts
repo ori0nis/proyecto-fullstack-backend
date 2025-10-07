@@ -3,28 +3,29 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
 import {
-  NewUserType,
+  NewUser,
   UserResponseType,
-  UserType,
+  User,
   LoginResponse,
   LoginUserType,
-  PublicUserType,
+  PublicUser,
 } from "../../types/user/index.js";
-import { User } from "../models/index.js";
+import { PlantModel, UserModel, UserPlant } from "../models/index.js";
 import { generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
+import { NewUserPlant, PlantResponse, UserPlantType } from "../../types/plant/index.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
   req: AuthRequest,
-  res: Response<UserResponseType<PublicUserType[]>>,
+  res: Response<UserResponseType<PublicUser[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await User.find().populate("plants").lean<UserType[]>();
-    const publicUsers = users.map(({ password, role, ...rest }) => rest) as PublicUserType[];
+    const users = await UserModel.find().populate("plants").lean<User[]>();
+    const publicUsers = users.map(({ password, role, ...rest }) => rest) as PublicUser[];
 
     res.status(200).json({
       message: "Users found",
@@ -39,12 +40,12 @@ export const getAllUsers = async (
 // GET USER BY ID
 export const getUserById = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<UserResponseType<PublicUserType>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userInDatabase = await User.findById(id).populate("plants").lean<UserType>();
+    const userInDatabase = await UserModel.findById(id).populate("plants").lean<User>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -68,14 +69,14 @@ export const getUserById = async (
 
 // REGISTER
 export const registerUser = async (
-  req: Request<{}, {}, NewUserType>,
-  res: Response<UserResponseType<PublicUserType>>,
+  req: Request<{}, {}, NewUser>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { username, email, password, plant_care_skill_level, plants } = req.body;
     // Role is enforced again to avoid overwrites
-    const user = new User({ username, email, password, plant_care_skill_level, plants, role: "user" });
+    const user = new UserModel({ username, email, password, plant_care_skill_level, plants, role: "user" });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
     const savedUser = await (await user.save()).populate("plants");
@@ -100,7 +101,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findOne({ email: req.body.email }).populate("plants").lean<UserType>();
+    const user = await UserModel.findOne({ email: req.body.email }).populate("plants").lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -146,13 +147,13 @@ export const loginUser = async (
 
 // EDIT USER
 export const editUser = async (
-  req: AuthRequest<{ id: string }, {}, Partial<NewUserType>>,
-  res: Response<UserResponseType<PublicUserType>>,
+  req: AuthRequest<{ id: string }, {}, Partial<NewUser>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userInDatabase = await User.findById(id);
+    const userInDatabase = await UserModel.findById(id);
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -168,7 +169,7 @@ export const editUser = async (
     const updates = { ...req.body };
     if ("role" in updates) delete updates.role;
 
-    const userUpdated = await User.findByIdAndUpdate(id, updates, { new: true }).populate("plants").lean<UserType>();
+    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true }).populate("plants").lean<User>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -195,7 +196,7 @@ export const editUser = async (
 // CHANGE PASSWORD
 export const changePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
-  res: Response<UserResponseType<PublicUserType>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -204,9 +205,9 @@ export const changePassword = async (
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
-    const userUpdated = await User.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
+    const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
       .populate("plants")
-      .lean<UserType>();
+      .lean<User>();
 
     if (!userUpdated) {
       res.status(404).json({
@@ -234,7 +235,7 @@ export const changePassword = async (
 //? Works both for first upload and for edit
 export const uploadProfilePicture = async (
   req: AuthRequest<{ id: string }, {}, {}>,
-  res: Response<UserResponseType<PublicUserType>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ) => {
   try {
@@ -251,7 +252,7 @@ export const uploadProfilePicture = async (
       return;
     }
 
-    const userInDatabase = await User.findById(id);
+    const userInDatabase = await UserModel.findById(id);
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -282,9 +283,9 @@ export const uploadProfilePicture = async (
 
     const { imgPath, publicUrl } = await supabaseUpload(profilePic);
 
-    const userUpdated = await User.findByIdAndUpdate(id, { imgPath: imgPath, imgPublicUrl: publicUrl }, { new: true })
+    const userUpdated = await UserModel.findByIdAndUpdate(id, { imgPath: imgPath, imgPublicUrl: publicUrl }, { new: true })
       .populate("plants")
-      .lean<UserType>();
+      .lean<User>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -308,16 +309,216 @@ export const uploadProfilePicture = async (
   }
 };
 
+// ADD NEW PLANT TO USER PROFILE
+export const addPlantToProfile = async (
+  req: AuthRequest<{}, {}, { plantId: string; nameByUser: string }>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { plantId, nameByUser } = req.body;
+
+    const userId = req.user?._id;
+
+    if (!userId) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+    }
+
+    const plantInRepository = await PlantModel.findById(plantId);
+
+    if (!plantInRepository) {
+      res.status(404).json({
+        message: "Plant not found in repository",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plantImg = req.file;
+
+    if (!plantImg) {
+      res.status(400).json({
+        message: "No plant image uploaded",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    try {
+      await isAllowedImage(plantImg);
+    } catch (error) {
+      res.status(400).json({
+        message: error instanceof Error ? error.message : "Invalid image",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { imgPath, publicUrl } = await supabaseUpload(plantImg);
+
+    const userPlant = new UserPlant({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
+    const savedUserPlant = await userPlant.save();
+
+    await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
+
+    res.status(201).json({
+      message: "Plant added to user profile",
+      status: 201,
+      data: savedUserPlant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// EDIT USER PLANT
+export const editUserPlant = async (
+  req: AuthRequest<{ plantId: string }, {}, Partial<NewUserPlant>>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { plantId } = req.params;
+    const updates = { ...req.body };
+
+    const userPlant = req.userPlant;
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plantImg = req.file;
+    let imgPath = userPlant.imgPath;
+    let imgPublicUrl = userPlant.imgPublicUrl;
+
+    if (plantImg) {
+      try {
+        await isAllowedImage(plantImg);
+
+        const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
+
+        if (deleteError) {
+          res.status(500).json({
+            message: "Error deleting plant",
+            status: 500,
+            data: null,
+          });
+
+          return;
+        }
+
+        const uploaded = await supabaseUpload(plantImg);
+        imgPath = uploaded.imgPath;
+        imgPublicUrl = uploaded.publicUrl;
+      } catch (error) {
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Invalid image",
+          status: 400,
+          data: null,
+        });
+
+        return;
+      }
+    }
+
+    const plantUpdated = await UserPlant.findByIdAndUpdate(
+      plantId,
+      { ...updates, imgPath, imgPublicUrl },
+      { new: true }
+    ).lean<UserPlantType>();
+
+    res.status(200).json({
+      message: "Plant successfully updated",
+      status: 200,
+      data: plantUpdated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE USER PLANT
+export const deleteUserPlant = async (
+  req: AuthRequest<{ plantId: string }>,
+  res: Response<PlantResponse<UserPlantType>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { plantId } = req.params;
+    const userPlant = req.userPlant;
+
+    if (!userPlant) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
+
+    if (deleteError) {
+      res.status(500).json({
+        message: "Error deleting image from Supabase",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plantDeleted = await UserPlant.findByIdAndDelete(plantId).lean<UserPlantType>();
+
+    if (!plantDeleted) {
+      res.status(500).json({
+        message: "Error deleting plant",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
+    await UserModel.findByIdAndUpdate(userPlant.userId, { $pull: { plants: plantDeleted.plantId } });
+
+    res.status(200).json({
+      message: "Plant deleted",
+      status: 200,
+      data: plantDeleted,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // DELETE USER
 export const deleteUser = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<UserResponseType<PublicUserType>>,
+  res: Response<UserResponseType<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
 
-    const userInDatabase = await User.findById(id).lean<UserType>();
+    const userInDatabase = await UserModel.findById(id).lean<User>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -341,7 +542,7 @@ export const deleteUser = async (
       return;
     }
 
-    const userDeleted = await User.findByIdAndDelete(id).populate("plants").lean<UserType>();
+    const userDeleted = await UserModel.findByIdAndDelete(id).populate("plants").lean<User>();
 
     if (!userDeleted) {
       res.status(500).json({

@@ -1,9 +1,9 @@
 //? Universal Plant repository
 
 import mongoose from "mongoose";
-import { PlantType } from "../../types/plant/index.js";
+import { Plant } from "../../types/plant/index.js";
 
-const plantSchema = new mongoose.Schema<PlantType>(
+const plantSchema = new mongoose.Schema<Plant>(
   {
     scientific_name: { type: String, required: true, trim: true },
     common_name: { type: String, required: true, trim: true },
@@ -21,4 +21,4 @@ const plantSchema = new mongoose.Schema<PlantType>(
   }
 );
 
-export const Plant = mongoose.model("plants", plantSchema, "plants");
+export const PlantModel = mongoose.model("plants", plantSchema, "plants");

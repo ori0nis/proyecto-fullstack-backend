@@ -1,3 +1,3 @@
-export * from "./PlantType.type.js";
+export * from "./Plant.type.js";
 export * from "./PlantResponse.type.js";
-export * from "./UserPlantType.type.js";
+export * from "./UserPlant.type.js";

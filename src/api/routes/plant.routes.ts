@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  canAddUserPlant,
   canDeleteUserPlant,
   canEditOrDeleteRepoPlant,
   canEditUserPlant,
@@ -30,8 +29,5 @@ plantRouter.get("/search/scientific-name", isAuth, getPlantsByScientificName);
 plantRouter.get("/search/common-name", isAuth, getPlantsByCommonName);
 plantRouter.get("/search/type", isAuth, getPlantsByType);
 plantRouter.post("/new-plant", isAuth, upload.single("imgPath"), postNewPlant);
-plantRouter.post("/user/:userId/new-plant", isAuth, canAddUserPlant, upload.single("imgPath"), addPlantToProfile);
 plantRouter.put("/plant/:id", isAuth, isAdmin, canEditOrDeleteRepoPlant, upload.single("imgPath"), editPlant);
-plantRouter.put("/user/:userId/plant/:plantId", isAuth, canEditUserPlant, upload.single("imgPath"), editUserPlant);
 plantRouter.delete("/plant/:id", isAuth, isAdmin, canEditOrDeleteRepoPlant, deletePlant);
-plantRouter.delete("/user/:userId/plant/:plantId", isAuth, canDeleteUserPlant, deleteUserPlant);

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { Plant } from "../api/models/Plant.model.js";
+import { PlantModel } from "../api/models/Plant.model.js";
 import { plants } from "../data/plant-list.js";
 
 dotenv.config();
@@ -14,10 +14,10 @@ const seedPlants = async () => {
     await mongoose.connect(DB_URL);
     console.log("✅ Connected to DB");
 
-    await Plant.collection.drop();
+    await PlantModel.collection.drop();
     console.log("🧹 Cleared existing plants");
 
-    await Plant.insertMany(plants);
+    await PlantModel.insertMany(plants);
     console.log("🌱 Plants successfully inserted!");
   } catch (error) {
     const message = error instanceof Error ? error.message : "❌ Couldn't complete the database seed";

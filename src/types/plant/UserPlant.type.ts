@@ -2,7 +2,7 @@
 
 import { Types } from "mongoose";
 
-export interface UserPlantType {
+export interface UserPlant {
   userId: Types.ObjectId;
   plantId: Types.ObjectId;
   nameByUser: string;
@@ -10,4 +10,4 @@ export interface UserPlantType {
   imgPublicUrl: string;
 }
 
-export type NewUserPlant = Omit<UserPlantType, "userId">;
+export type NewUserPlant = Omit<UserPlant, "userId">;

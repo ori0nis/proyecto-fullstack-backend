@@ -1,6 +1,6 @@
-import { PublicUserType } from "./UserType.type.js";
+import { PublicUser } from "./User.type.js";
 
 export interface LoginResponse {
   token: string;
-  user: PublicUserType;
+  user: PublicUser;
 }

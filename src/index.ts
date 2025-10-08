@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { mongooseConnection, supabase } from "./config/index.js";
 import { plantRouter, userRouter } from "./api/routes/index.js";
 
@@ -28,9 +29,17 @@ mongooseConnection();
   }
 })();
 
-// Response handlers
+// Response handlers and cookies
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: "https://myplants-backend.onrender.com",
+    credentials: true,
+  })
+);
 
 // Router and endpoints
 const router = express.Router();

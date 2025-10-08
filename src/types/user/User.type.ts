@@ -2,7 +2,7 @@
 
 import { Types } from "mongoose";
 
-export interface UserType {
+export interface User {
   _id: Types.ObjectId;
   username: string;
   email: string;
@@ -15,6 +15,6 @@ export interface UserType {
 }
 
 //? Type for the user format sent by the user in register request
-export type NewUserType = Omit<UserType, "_id" | "role">;
+export type NewUser = Omit<User, "_id" | "role" | "imgPath" | "imgPublicUrl">;
 //? Type for the 200 OK response after register and login
-export type PublicUserType = Omit<UserType, "role" | "password">;
+export type PublicUser = Omit<User, "role" | "password">;

@@ -1,5 +1,5 @@
-export interface UserResponseType<T> {
+export interface UserResponse<T> {
   data: T | null;
   message: string;
-  status?: number;
+  status: number;
 }

@@ -4,18 +4,18 @@ import { type Response, type NextFunction } from "express";
 import { supabase } from "../../config/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
-import { NewPlantType, NewUserPlant, PlantResponse, PlantType, UserPlantType } from "../../types/plant/index.js";
+import { NewPlant, PlantResponse, Plant } from "../../types/plant/index.js";
 import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
-import { Plant, User, UserPlant } from "./../models/index.js";
+import { PlantModel } from "./../models/index.js";
 
 // GET ALL PLANTS
 export const getAllPlants = async (
   req: AuthRequest,
-  res: Response<PlantResponse<PlantType[]>>,
+  res: Response<PlantResponse<Plant[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const plants = await Plant.find().lean<PlantType[]>();
+    const plants = await PlantModel.find().lean<Plant[]>();
 
     res.status(200).json({
       message: "Plants found",
@@ -30,13 +30,13 @@ export const getAllPlants = async (
 // GET PLANT BY ID
 export const getPlantById = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<PlantResponse<PlantType>>,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
 
-    const plant = await Plant.findById(id).lean<PlantType>();
+    const plant = await PlantModel.findById(id).lean<Plant>();
 
     if (!plant) {
       res.status(404).json({
@@ -61,7 +61,7 @@ export const getPlantById = async (
 // GET PLANT BY SCIENTIFIC NAME
 export const getPlantsByScientificName = async (
   req: AuthRequest<{}, {}, {}, { scientific_name: string }>,
-  res: Response<PlantResponse<PlantType[]>>,
+  res: Response<PlantResponse<Plant[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -77,9 +77,9 @@ export const getPlantsByScientificName = async (
       return;
     }
 
-    const plants = await Plant.find({
+    const plants = await PlantModel.find({
       scientific_name: { $regex: new RegExp(scientific_name.trim(), "i") },
-    }).lean<PlantType[]>();
+    }).lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -104,7 +104,7 @@ export const getPlantsByScientificName = async (
 // GET PLANT BY TYPE
 export const getPlantsByType = async (
   req: AuthRequest<{}, {}, {}, { type: string }>,
-  res: Response<PlantResponse<PlantType[]>>,
+  res: Response<PlantResponse<Plant[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -121,7 +121,7 @@ export const getPlantsByType = async (
       return;
     }
 
-    const plants = await Plant.find({ type: type.toLowerCase() }).lean<PlantType[]>();
+    const plants = await PlantModel.find({ type: type.toLowerCase() }).lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -146,7 +146,7 @@ export const getPlantsByType = async (
 // GET PLANT BY COMMON NAME
 export const getPlantsByCommonName = async (
   req: AuthRequest<{}, {}, {}, { common_name: string }>,
-  res: Response<PlantResponse<PlantType[]>>,
+  res: Response<PlantResponse<Plant[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -162,9 +162,9 @@ export const getPlantsByCommonName = async (
       return;
     }
 
-    const plants = await Plant.find({
+    const plants = await PlantModel.find({
       common_name: { $regex: new RegExp(common_name.trim(), "i") },
-    }).lean<PlantType[]>();
+    }).lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -188,13 +188,13 @@ export const getPlantsByCommonName = async (
 
 // POST NEW PLANT (UNIVERSAL REPOSITORY)
 export const postNewPlant = async (
-  req: AuthRequest<{}, {}, NewPlantType>,
-  res: Response<PlantResponse<PlantType>>,
+  req: AuthRequest<{}, {}, NewPlant>,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const scientific_name = req.body.scientific_name.trim();
-    const plantExists = await Plant.findOne({ scientific_name });
+    const plantExists = await PlantModel.findOne({ scientific_name });
 
     if (plantExists) {
       res.status(409).json({
@@ -244,7 +244,7 @@ export const postNewPlant = async (
 
     const { imgPath, publicUrl } = await supabaseUpload(plantImg);
 
-    const plant = new Plant({
+    const plant = new PlantModel({
       ...req.body,
       scientific_name,
       imgPath,
@@ -263,80 +263,17 @@ export const postNewPlant = async (
   }
 };
 
-// ADD NEW PLANT TO USER PROFILE
-export const addPlantToProfile = async (
-  req: AuthRequest<{ userId: string }, {}, { plantId: string; nameByUser: string }>,
-  res: Response<PlantResponse<UserPlantType>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { plantId, nameByUser } = req.body;
-    const { userId } = req.params;
-
-    const plantInRepository = await Plant.findById(plantId);
-
-    if (!plantInRepository) {
-      res.status(404).json({
-        message: "Plant not found in repository",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
-
-    const plantImg = req.file;
-
-    if (!plantImg) {
-      res.status(400).json({
-        message: "No plant image uploaded",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    try {
-      await isAllowedImage(plantImg);
-    } catch (error) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Invalid image",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    const { imgPath, publicUrl } = await supabaseUpload(plantImg);
-
-    const userPlant = new UserPlant({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
-    const savedUserPlant = await userPlant.save();
-
-    await User.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
-
-    res.status(201).json({
-      message: "Plant added to user profile",
-      status: 201,
-      data: savedUserPlant,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // EDIT PLANT (UNIVERSAL REPOSITORY)
 export const editPlant = async (
-  req: AuthRequest<{ id: string }, {}, Partial<NewPlantType>>,
-  res: Response<PlantResponse<PlantType>>,
+  req: AuthRequest<{ id: string }, {}, Partial<NewPlant>>,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const updates = { ...req.body };
 
-    const plant = await Plant.findById(id);
+    const plant = await PlantModel.findById(id);
 
     if (!plant) {
       res.status(404).json({
@@ -382,11 +319,11 @@ export const editPlant = async (
       }
     }
 
-    const plantUpdated = await Plant.findByIdAndUpdate(
+    const plantUpdated = await PlantModel.findByIdAndUpdate(
       id,
       { ...updates, imgPath, imgPublicUrl },
       { new: true }
-    ).lean<PlantType>();
+    ).lean<Plant>();
 
     res.status(200).json({
       message: "Plant updated",
@@ -398,87 +335,15 @@ export const editPlant = async (
   }
 };
 
-// EDIT USER PLANT
-export const editUserPlant = async (
-  req: AuthRequest<{ userId: string; plantId: string }, {}, Partial<NewUserPlant>>,
-  res: Response<PlantResponse<UserPlantType>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { plantId } = req.params;
-    const updates = { ...req.body };
-
-    const userPlant = req.userPlant;
-
-    if (!userPlant) {
-      res.status(404).json({
-        message: "Plant not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
-
-    const plantImg = req.file;
-    let imgPath = userPlant.imgPath;
-    let imgPublicUrl = userPlant.imgPublicUrl;
-
-    if (plantImg) {
-      try {
-        await isAllowedImage(plantImg);
-
-        const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
-
-        if (deleteError) {
-          res.status(500).json({
-            message: "Error deleting plant",
-            status: 500,
-            data: null,
-          });
-
-          return;
-        }
-
-        const uploaded = await supabaseUpload(plantImg);
-        imgPath = uploaded.imgPath;
-        imgPublicUrl = uploaded.publicUrl;
-      } catch (error) {
-        res.status(400).json({
-          message: error instanceof Error ? error.message : "Invalid image",
-          status: 400,
-          data: null,
-        });
-
-        return;
-      }
-    }
-
-    const plantUpdated = await UserPlant.findByIdAndUpdate(
-      plantId,
-      { ...updates, imgPath, imgPublicUrl },
-      { new: true }
-    ).lean<UserPlantType>();
-
-    res.status(200).json({
-      message: "Plant successfully updated",
-      status: 200,
-      data: plantUpdated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // DELETE PLANT (UNIVERSAL REPOSITORY)
 export const deletePlant = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<PlantResponse<PlantType>>,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const plant = await Plant.findById(id);
+    const plant = await PlantModel.findById(id);
 
     if (!plant) {
       res.status(404).json({
@@ -502,7 +367,7 @@ export const deletePlant = async (
       return;
     }
 
-    const plantDeleted = await Plant.findByIdAndDelete(id).lean<PlantType>();
+    const plantDeleted = await PlantModel.findByIdAndDelete(id).lean<Plant>();
 
     if (!plantDeleted) {
       res.status(500).json({
@@ -513,62 +378,6 @@ export const deletePlant = async (
 
       return;
     }
-
-    res.status(200).json({
-      message: "Plant deleted",
-      status: 200,
-      data: plantDeleted,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// DELETE USER PLANT
-export const deleteUserPlant = async (
-  req: AuthRequest<{ userId: string; plantId: string }>,
-  res: Response<PlantResponse<UserPlantType>>,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { plantId } = req.params;
-    const userPlant = await UserPlant.findById(plantId);
-
-    if (!userPlant) {
-      res.status(404).json({
-        message: "Plant not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
-
-    const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
-
-    if (deleteError) {
-      res.status(500).json({
-        message: "Error deleting image from Supabase",
-        status: 500,
-        data: null,
-      });
-
-      return;
-    }
-
-    const plantDeleted = await UserPlant.findByIdAndDelete(plantId).lean<UserPlantType>();
-
-    if (!plantDeleted) {
-      res.status(500).json({
-        message: "Error deleting plant",
-        status: 500,
-        data: null,
-      });
-
-      return;
-    }
-
-    await User.findByIdAndUpdate(userPlant.userId, { $pull: { plants: plantDeleted.plantId } });
 
     res.status(200).json({
       message: "Plant deleted",

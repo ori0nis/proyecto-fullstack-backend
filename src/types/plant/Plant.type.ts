@@ -11,4 +11,4 @@ export interface Plant {
   type: "tropical" | "desert" | "temperate" | "alpine" | "aquatic";
 }
 
-export type NewPlantType = Omit<Plant, "_id">;
+export type NewPlant = Omit<Plant, "_id">;

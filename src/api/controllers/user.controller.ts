@@ -2,14 +2,7 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import {
-  NewUser,
-  UserResponseType,
-  User,
-  LoginResponse,
-  LoginUserType,
-  PublicUser,
-} from "../../types/user/index.js";
+import { NewUser, UserResponse, User, LoginResponse, LoginUserType, PublicUser } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
@@ -20,7 +13,7 @@ import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.
 // GET ALL USERS
 export const getAllUsers = async (
   req: AuthRequest,
-  res: Response<UserResponseType<PublicUser[]>>,
+  res: Response<UserResponse<PublicUser[]>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -40,7 +33,7 @@ export const getAllUsers = async (
 // GET USER BY ID
 export const getUserById = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -70,13 +63,13 @@ export const getUserById = async (
 // REGISTER
 export const registerUser = async (
   req: Request<{}, {}, NewUser>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { username, email, password, plant_care_skill_level, plants } = req.body;
+    const { username, email, password, plant_care_skill_level } = req.body;
     // Role is enforced again to avoid overwrites
-    const user = new UserModel({ username, email, password, plant_care_skill_level, plants, role: "user" });
+    const user = new UserModel({ username, email, password, plant_care_skill_level, role: "user" });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
     const savedUser = await (await user.save()).populate("plants");
@@ -97,7 +90,7 @@ export const registerUser = async (
 // LOGIN
 export const loginUser = async (
   req: Request<{}, {}, LoginUserType>,
-  res: Response<UserResponseType<LoginResponse>>,
+  res: Response<UserResponse<LoginResponse>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -130,6 +123,13 @@ export const loginUser = async (
       role: user.role,
     });
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
     const { password, role, ...publicUser } = user;
 
     res.status(200).json({
@@ -145,10 +145,64 @@ export const loginUser = async (
   }
 };
 
+// VERIFY USER AUTH (USED BY THE CUSTOM HOOK IN THE FRONTEND)
+export const verifyUserAuth = async (
+  req: AuthRequest,
+  res: Response<UserResponse<PublicUser>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { password, role, ...publicUser } = user;
+
+    res.status(200).json({
+      message: "Authenticated user",
+      status: 200,
+      data: publicUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// LOGOUT
+export const logoutUser = async (
+  req: Request,
+  res: Response<UserResponse<null>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    res.status(200).json({
+      message: "User logged out successfully",
+      status: 200,
+      data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // EDIT USER
 export const editUser = async (
   req: AuthRequest<{ id: string }, {}, Partial<NewUser>>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -196,7 +250,7 @@ export const editUser = async (
 // CHANGE PASSWORD
 export const changePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -235,7 +289,7 @@ export const changePassword = async (
 //? Works both for first upload and for edit
 export const uploadProfilePicture = async (
   req: AuthRequest<{ id: string }, {}, {}>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ) => {
   try {
@@ -283,7 +337,11 @@ export const uploadProfilePicture = async (
 
     const { imgPath, publicUrl } = await supabaseUpload(profilePic);
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, { imgPath: imgPath, imgPublicUrl: publicUrl }, { new: true })
+    const userUpdated = await UserModel.findByIdAndUpdate(
+      id,
+      { imgPath: imgPath, imgPublicUrl: publicUrl },
+      { new: true }
+    )
       .populate("plants")
       .lean<User>();
 
@@ -512,7 +570,7 @@ export const deleteUserPlant = async (
 // DELETE USER
 export const deleteUser = async (
   req: AuthRequest<{ id: string }>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {

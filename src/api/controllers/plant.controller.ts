@@ -4,7 +4,7 @@ import { type Response, type NextFunction } from "express";
 import { supabase } from "../../config/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
-import { NewPlantType, PlantResponse, Plant } from "../../types/plant/index.js";
+import { NewPlant, PlantResponse, Plant } from "../../types/plant/index.js";
 import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
 import { PlantModel } from "./../models/index.js";
 
@@ -188,7 +188,7 @@ export const getPlantsByCommonName = async (
 
 // POST NEW PLANT (UNIVERSAL REPOSITORY)
 export const postNewPlant = async (
-  req: AuthRequest<{}, {}, NewPlantType>,
+  req: AuthRequest<{}, {}, NewPlant>,
   res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
@@ -265,7 +265,7 @@ export const postNewPlant = async (
 
 // EDIT PLANT (UNIVERSAL REPOSITORY)
 export const editPlant = async (
-  req: AuthRequest<{ id: string }, {}, Partial<NewPlantType>>,
+  req: AuthRequest<{ id: string }, {}, Partial<NewPlant>>,
   res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {

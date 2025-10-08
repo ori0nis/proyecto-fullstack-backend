@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUser, UserResponseType, PublicUser } from "../types/user/index.js";
+import { NewUser, UserResponse, PublicUser } from "../types/user/index.js";
 import { UserModel, UserPlantModel } from "../api/models/index.js";
 import { AuthRequest } from "../types/jwt/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../types/plant/index.js";
@@ -8,7 +8,7 @@ import { NewUserPlant, PlantResponse, UserPlant } from "../types/plant/index.js"
 //? Checks what the mongoose model can't (unique username and email)
 export const isUniqueUser = async (
   req: Request<{}, {}, NewUser>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -109,7 +109,7 @@ export const canEditUser = async (
 //? Not even admin can change other users' passwords, that's saved for direct DB handling
 export const canChangePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
-  res: Response<UserResponseType<PublicUser>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {

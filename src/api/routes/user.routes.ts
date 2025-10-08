@@ -19,8 +19,10 @@ import {
   getAllUsers,
   getUserById,
   loginUser,
+  logoutUser,
   registerUser,
   uploadProfilePicture,
+  verifyUserAuth,
 } from "../controllers/index.js";
 import { upload } from "../../config/index.js";
 
@@ -28,6 +30,8 @@ export const userRouter = express.Router();
 
 userRouter.post("/register", isUniqueUser, registerUser);
 userRouter.post("/login", loginUser);
+userRouter.get("/me", isAuth, verifyUserAuth);
+userRouter.post("/logout", logoutUser);
 userRouter.get("/all-users", isAuth, isAdmin, getAllUsers);
 userRouter.get("/user/:id", isAuth, getUserById);
 userRouter.post("/user/profile/new-plant", isAuth, upload.single("imgPath"), addPlantToProfile);

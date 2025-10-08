@@ -15,6 +15,6 @@ export interface User {
 }
 
 //? Type for the user format sent by the user in register request
-export type NewUser = Omit<User, "_id" | "role">;
+export type NewUser = Omit<User, "_id" | "role" | "imgPath" | "imgPublicUrl">;
 //? Type for the 200 OK response after register and login
 export type PublicUser = Omit<User, "role" | "password">;

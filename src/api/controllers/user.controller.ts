@@ -2,7 +2,7 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUser, UserResponse, User, LoginResponse, LoginUserType, PublicUser } from "../../types/user/index.js";
+import { NewUser, UserResponse, User, LoginUserType, PublicUser } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
@@ -90,7 +90,7 @@ export const registerUser = async (
 // LOGIN
 export const loginUser = async (
   req: Request<{}, {}, LoginUserType>,
-  res: Response<UserResponse<LoginResponse>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -135,10 +135,7 @@ export const loginUser = async (
     res.status(200).json({
       message: "User logged in with token",
       status: 200,
-      data: {
-        token,
-        user: publicUser,
-      },
+      data: publicUser,
     });
   } catch (error) {
     next(error);

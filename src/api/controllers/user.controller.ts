@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
 import { NewUser, UserResponse, User, LoginUserType, PublicUser } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
-import { generateToken, isAllowedImage } from "../../utils/index.js";
+import { generateRefreshToken, generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
@@ -47,7 +47,7 @@ export const getUserById = async (
         data: null,
       });
     } else {
-      const { password, role, ...publicUser } = userInDatabase;
+      const { password, ...publicUser } = userInDatabase;
 
       res.status(200).json({
         message: "User found",
@@ -75,7 +75,7 @@ export const registerUser = async (
     const savedUser = await (await user.save()).populate("plants");
     const userPosted = savedUser.toObject();
 
-    const { password: _password, role, ...publicUser } = userPosted;
+    const { password: _password, ...publicUser } = userPosted;
 
     res.status(201).json({
       message: "User created",
@@ -123,6 +123,11 @@ export const loginUser = async (
       role: user.role,
     });
 
+    const refreshToken = generateRefreshToken({
+      _id: user._id.toString(),
+      role: user.role,
+    });
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
@@ -130,7 +135,14 @@ export const loginUser = async (
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    const { password, role, ...publicUser } = user;
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "User logged in with token",
@@ -161,7 +173,7 @@ export const verifyUserAuth = async (
       return;
     }
 
-    const { password, role, ...publicUser } = user;
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "Authenticated user",
@@ -232,7 +244,7 @@ export const editUser = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "User updated",
@@ -270,7 +282,7 @@ export const changePassword = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "Password successfully changed",
@@ -352,7 +364,7 @@ export const uploadProfilePicture = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "Profile picture updated",
@@ -609,7 +621,7 @@ export const deleteUser = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userDeleted;
+    const { password, ...publicUser } = userDeleted;
 
     res.status(200).json({
       message: "User deleted",

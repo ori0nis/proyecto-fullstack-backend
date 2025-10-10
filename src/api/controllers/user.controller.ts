@@ -2,9 +2,9 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUser, UserResponse, User, LoginUserType, PublicUser } from "../../types/user/index.js";
+import { NewUser, UserResponse, User, LoginUserType, PublicUser, UserProfile } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
-import { generateToken, isAllowedImage } from "../../utils/index.js";
+import { generateRefreshToken, generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
@@ -17,7 +17,7 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await UserModel.find().populate("plants").lean<User[]>();
+    const users = await UserModel.find().populate("userplants").lean<User[]>();
     const publicUsers = users.map(({ password, role, ...rest }) => rest) as PublicUser[];
 
     res.status(200).json({
@@ -32,13 +32,24 @@ export const getAllUsers = async (
 
 // GET USER BY ID
 export const getUserById = async (
-  req: AuthRequest<{ id: string }>,
+  req: AuthRequest<{}, {}, {}, { id: string }>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const userInDatabase = await UserModel.findById(id).populate("plants").lean<User>();
+    const { id } = req.query;
+
+    if (!id || id.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid id",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await UserModel.findById(id).populate("userplants").lean<User>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -46,15 +57,101 @@ export const getUserById = async (
         status: 404,
         data: null,
       });
-    } else {
-      const { password, role, ...publicUser } = userInDatabase;
 
-      res.status(200).json({
-        message: "User found",
-        status: 200,
-        data: publicUser,
-      });
+      return;
     }
+
+    const { password, ...publicUser } = userInDatabase;
+
+    res.status(200).json({
+      message: "User found",
+      status: 200,
+      data: publicUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET USER BY EMAIL
+export const getUserByEmail = async (
+  req: AuthRequest<{}, {}, {}, { email: string }>,
+  res: Response<UserResponse<PublicUser>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.query;
+
+    if (!email || email.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid email",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await UserModel.findOne({ email: email }).populate("userplants").lean<User>();
+
+    if (!userInDatabase) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const { password, ...publicUser } = userInDatabase;
+
+    res.status(200).json({
+      message: "User found",
+      status: 200,
+      data: publicUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET USER BY USERNAME
+export const getUserByUsername = async (
+  req: AuthRequest<{}, {}, {}, { username: string }>,
+  res: Response<UserResponse<UserProfile>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { username } = req.query;
+
+    if (!username || username.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid username",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await UserModel.findOne({ username: username }).populate("userplants").lean<UserProfile>();
+
+    if (!userInDatabase) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "User found",
+      status: 200,
+      data: userInDatabase,
+    });
   } catch (error) {
     next(error);
   }
@@ -72,10 +169,10 @@ export const registerUser = async (
     const user = new UserModel({ username, email, password, plant_care_skill_level, role: "user" });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
-    const savedUser = await (await user.save()).populate("plants");
+    const savedUser = await (await user.save()).populate("userplants");
     const userPosted = savedUser.toObject();
 
-    const { password: _password, role, ...publicUser } = userPosted;
+    const { password: _password, ...publicUser } = userPosted;
 
     res.status(201).json({
       message: "User created",
@@ -94,7 +191,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email }).populate("plants").lean<User>();
+    const user = await UserModel.findOne({ email: req.body.email }).populate("userplants").lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -123,6 +220,11 @@ export const loginUser = async (
       role: user.role,
     });
 
+    const refreshToken = generateRefreshToken({
+      _id: user._id.toString(),
+      role: user.role,
+    });
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
@@ -130,7 +232,14 @@ export const loginUser = async (
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    const { password, role, ...publicUser } = user;
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "User logged in with token",
@@ -161,7 +270,7 @@ export const verifyUserAuth = async (
       return;
     }
 
-    const { password, role, ...publicUser } = user;
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "Authenticated user",
@@ -220,7 +329,9 @@ export const editUser = async (
     const updates = { ...req.body };
     if ("role" in updates) delete updates.role;
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true }).populate("plants").lean<User>();
+    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
+      .populate("userplants")
+      .lean<User>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -232,7 +343,7 @@ export const editUser = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "User updated",
@@ -257,7 +368,7 @@ export const changePassword = async (
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
-      .populate("plants")
+      .populate("userplants")
       .lean<User>();
 
     if (!userUpdated) {
@@ -270,7 +381,7 @@ export const changePassword = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "Password successfully changed",
@@ -339,7 +450,7 @@ export const uploadProfilePicture = async (
       { imgPath: imgPath, imgPublicUrl: publicUrl },
       { new: true }
     )
-      .populate("plants")
+      .populate("userplants")
       .lean<User>();
 
     if (!userUpdated) {
@@ -352,7 +463,7 @@ export const uploadProfilePicture = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userUpdated;
+    const { password, ...publicUser } = userUpdated;
 
     res.status(200).json({
       message: "Profile picture updated",
@@ -597,7 +708,7 @@ export const deleteUser = async (
       return;
     }
 
-    const userDeleted = await UserModel.findByIdAndDelete(id).populate("plants").lean<User>();
+    const userDeleted = await UserModel.findByIdAndDelete(id).populate("userplants").lean<User>();
 
     if (!userDeleted) {
       res.status(500).json({
@@ -609,7 +720,7 @@ export const deleteUser = async (
       return;
     }
 
-    const { password, role, ...publicUser } = userDeleted;
+    const { password, ...publicUser } = userDeleted;
 
     res.status(200).json({
       message: "User deleted",

@@ -29,12 +29,22 @@ export const getAllPlants = async (
 
 // GET PLANT BY ID
 export const getPlantById = async (
-  req: AuthRequest<{ id: string }>,
+  req: AuthRequest<{}, {}, {}, { id: string }>,
   res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
+
+    if (!id) {
+      res.status(400).json({
+        message: "Please provide a valid plant id",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
 
     const plant = await PlantModel.findById(id).lean<Plant>();
 

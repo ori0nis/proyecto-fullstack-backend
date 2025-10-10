@@ -16,5 +16,7 @@ export interface User {
 
 //? Type for the user format sent by the user in register request
 export type NewUser = Omit<User, "_id" | "role" | "imgPath" | "imgPublicUrl">;
-//? Type for the 200 OK response after register and login
+//? Type for all API responses
 export type PublicUser = Omit<User, "password">;
+//? Type for search by username response
+export type UserProfile = Pick<User, "username" | "plant_care_skill_level" | "plants">;

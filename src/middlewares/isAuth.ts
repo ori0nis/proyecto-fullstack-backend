@@ -1,5 +1,5 @@
 import { Response, NextFunction, RequestHandler } from "express";
-import { UserResponse, User } from "../types/user/index.js";
+import { UserResponse, PublicUser, User } from "../types/user/index.js";
 import { generateToken, verifyToken } from "../utils/index.js";
 import { UserModel } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
@@ -7,7 +7,7 @@ import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
 // AUTHENTICATION
 export const isAuth: RequestHandler = async (
   req: AuthRequest,
-  res: Response<UserResponse<User>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -24,7 +24,7 @@ export const isAuth: RequestHandler = async (
     }
 
     const decoded = verifyToken({ token }) as JWTPayload;
-    const user = await UserModel.findById(decoded._id);
+    const user = await UserModel.findById(decoded._id).lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -36,8 +36,10 @@ export const isAuth: RequestHandler = async (
       return;
     }
 
-    req.user = user;
-    
+    const { password, ...publicUser } = user;
+
+    req.user = publicUser;
+
     next();
   } catch (error) {
     next(error);
@@ -47,7 +49,7 @@ export const isAuth: RequestHandler = async (
 // TOKEN REFRESH
 export const refreshToken = async (
   req: AuthRequest,
-  res: Response<UserResponse<User>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -63,7 +65,7 @@ export const refreshToken = async (
       return;
     }
 
-    const decoded = verifyToken({ token: refreshToken, refresh: true}) as JWTPayload;
+    const decoded = verifyToken({ token: refreshToken, refresh: true }) as JWTPayload;
 
     if (!decoded) {
       res.status(403).json({
@@ -87,9 +89,9 @@ export const refreshToken = async (
       return;
     }
 
-    const newAccessToken = generateToken({ 
-      _id: user._id.toString(), 
-      role: user.role 
+    const newAccessToken = generateToken({
+      _id: user._id.toString(),
+      role: user.role,
     });
 
     res.cookie("token", newAccessToken, {

@@ -5,6 +5,47 @@ import { UserModel, UserPlantModel } from "../api/models/index.js";
 import { AuthRequest } from "../types/jwt/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../types/plant/index.js";
 
+type ActionType = "edit" | "delete";
+
+//? User can only edit or delete own profile, admin can edit or delete anyone, but can't appoint other admins
+export const canEditOrDeleteUser = (action: ActionType) => {
+  return async (req: AuthRequest<{ id: string }>, res: Response, next: NextFunction) => {
+    try {
+      const requester = req.user;
+      const { id } = req.params;
+
+      if (!requester) {
+        res.status(401).json({
+          message: "Unauthorized",
+          status: 401,
+          data: null,
+        });
+
+        return;
+      }
+
+      const isSelf = requester._id.toString() === id;
+      const isAdmin = requester.role === "admin";
+
+      if (!isSelf && !isAdmin) {
+        res.status(403).json({
+          message: `You can't ${action} other users`,
+          status: 403,
+          data: null,
+        });
+
+        return;
+      }
+
+      if (action === "edit" && req.body && "role" in req.body) delete req.body.role;
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
 //? Checks what the mongoose model can't (unique username and email)
 export const isUniqueUser = async (
   req: Request<{}, {}, NewUser>,
@@ -70,42 +111,6 @@ export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunctio
   }
 };
 
-//? Allows users to update their own profile (except for role), and admins to update anyone
-export const canEditUser = async (
-  req: AuthRequest<{ id: string }>,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const requester = req.user;
-    const { id } = req.params;
-
-    if (!requester) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
-    if (requester._id.toString() === id || requester.role === "admin") {
-      if (req.body && "role" in req.body) delete req.body.role;
-
-      next();
-    } else {
-      res.status(403).json({
-        message: "You can't update other users",
-        status: 403,
-        data: null,
-      });
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
 //? Not even admin can change other users' passwords, that's saved for direct DB handling
 export const canChangePassword = async (
   req: AuthRequest<{ id: string }, {}, { oldPassword: string; newPassword: string }>,
@@ -114,7 +119,6 @@ export const canChangePassword = async (
 ): Promise<void> => {
   try {
     const user = req.user;
-    const { oldPassword } = req.body;
     const { id } = req.params;
 
     if (!user) {
@@ -131,18 +135,6 @@ export const canChangePassword = async (
       res.status(403).json({
         message: "You can't update other users",
         status: 403,
-        data: null,
-      });
-
-      return;
-    }
-
-    const passwordMatches = await bcrypt.compare(oldPassword, user.password);
-
-    if (!passwordMatches) {
-      res.status(400).json({
-        message: "Invalid credentials",
-        status: 400,
         data: null,
       });
 
@@ -255,38 +247,4 @@ export const canDeleteUserPlant = async (
   }
 };
 
-//? Users can only delete own account, admin can delete anyone
-export const canDeleteUser = async (
-  req: AuthRequest<{ id: string }>,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const requester = req.user;
-    const { id } = req.params;
 
-    if (!requester) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
-    if (requester._id.toString() !== id && requester.role !== "admin") {
-      res.status(403).json({
-        message: "You can't delete other users",
-        status: 403,
-        data: null,
-      });
-
-      return;
-    }
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-};

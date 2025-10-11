@@ -2,7 +2,7 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUser, UserResponse, User, LoginUserType, PublicUser, UserProfile } from "../../types/user/index.js";
+import { NewUser, UserResponse, User, LoginUser, PublicUser, UserProfile } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateRefreshToken, generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
@@ -17,13 +17,12 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await UserModel.find().populate("userplants").lean<User[]>();
-    const publicUsers = users.map(({ password, role, ...rest }) => rest) as PublicUser[];
+    const users = await UserModel.find().populate("userplants").lean<PublicUser[]>();
 
     res.status(200).json({
       message: "Users found",
       status: 200,
-      data: publicUsers,
+      data: users,
     });
   } catch (error) {
     next(error);
@@ -49,7 +48,7 @@ export const getUserById = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findById(id).populate("userplants").lean<User>();
+    const userInDatabase = await UserModel.findById(id).populate("userplants").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -61,12 +60,10 @@ export const getUserById = async (
       return;
     }
 
-    const { password, ...publicUser } = userInDatabase;
-
     res.status(200).json({
       message: "User found",
       status: 200,
-      data: publicUser,
+      data: userInDatabase,
     });
   } catch (error) {
     next(error);
@@ -92,7 +89,7 @@ export const getUserByEmail = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ email: email }).populate("userplants").lean<User>();
+    const userInDatabase = await UserModel.findOne({ email: email }).populate("userplants").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -104,12 +101,10 @@ export const getUserByEmail = async (
       return;
     }
 
-    const { password, ...publicUser } = userInDatabase;
-
     res.status(200).json({
       message: "User found",
       status: 200,
-      data: publicUser,
+      data: userInDatabase,
     });
   } catch (error) {
     next(error);
@@ -186,7 +181,7 @@ export const registerUser = async (
 
 // LOGIN
 export const loginUser = async (
-  req: Request<{}, {}, LoginUserType>,
+  req: Request<{}, {}, LoginUser>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
@@ -270,12 +265,10 @@ export const verifyUserAuth = async (
       return;
     }
 
-    const { password, ...publicUser } = user;
-
     res.status(200).json({
       message: "Authenticated user",
       status: 200,
-      data: publicUser,
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -331,7 +324,7 @@ export const editUser = async (
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
       .populate("userplants")
-      .lean<User>();
+      .lean<PublicUser>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -343,12 +336,10 @@ export const editUser = async (
       return;
     }
 
-    const { password, ...publicUser } = userUpdated;
-
     res.status(200).json({
       message: "User updated",
       status: 200,
-      data: publicUser,
+      data: userUpdated,
     });
   } catch (error) {
     next(error);
@@ -363,15 +354,11 @@ export const changePassword = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    const userInDatabase = await UserModel.findById(id);
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
-      .populate("userplants")
-      .lean<User>();
-
-    if (!userUpdated) {
+    if (!userInDatabase) {
       res.status(404).json({
         message: "User not found",
         status: 404,
@@ -381,12 +368,38 @@ export const changePassword = async (
       return;
     }
 
-    const { password, ...publicUser } = userUpdated;
+    const passwordMatches = await bcrypt.compare(oldPassword, userInDatabase.password);
+
+    if (!passwordMatches) {
+      res.status(400).json({
+        message: "Old password is incorrect",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
+      .populate("userplants")
+      .lean<PublicUser>();
+
+    if (!userUpdated) {
+      res.status(500).json({
+        message: "Couldn't update user",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
 
     res.status(200).json({
       message: "Password successfully changed",
       status: 200,
-      data: publicUser,
+      data: userUpdated,
     });
   } catch (error) {
     next(error);
@@ -451,7 +464,7 @@ export const uploadProfilePicture = async (
       { new: true }
     )
       .populate("userplants")
-      .lean<User>();
+      .lean<PublicUser>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -463,12 +476,10 @@ export const uploadProfilePicture = async (
       return;
     }
 
-    const { password, ...publicUser } = userUpdated;
-
     res.status(200).json({
       message: "Profile picture updated",
       status: 200,
-      data: publicUser,
+      data: userUpdated,
     });
   } catch (error) {
     next(error);
@@ -684,7 +695,7 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    const userInDatabase = await UserModel.findById(id).lean<User>();
+    const userInDatabase = await UserModel.findById(id);
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -696,7 +707,7 @@ export const deleteUser = async (
       return;
     }
 
-    const { data, error } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+    const { error } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
 
     if (error) {
       res.status(500).json({
@@ -708,7 +719,7 @@ export const deleteUser = async (
       return;
     }
 
-    const userDeleted = await UserModel.findByIdAndDelete(id).populate("userplants").lean<User>();
+    const userDeleted = await UserModel.findByIdAndDelete(id).populate("userplants").lean<PublicUser>();
 
     if (!userDeleted) {
       res.status(500).json({
@@ -720,12 +731,10 @@ export const deleteUser = async (
       return;
     }
 
-    const { password, ...publicUser } = userDeleted;
-
     res.status(200).json({
       message: "User deleted",
       status: 200,
-      data: publicUser,
+      data: userDeleted,
     });
   } catch (error) {
     next(error);

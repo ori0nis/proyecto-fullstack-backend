@@ -1,9 +1,8 @@
 import express from "express";
 import {
   canChangePassword,
-  canDeleteUser,
   canDeleteUserPlant,
-  canEditUser,
+  canEditOrDeleteUser,
   canEditUserPlant,
   isAdmin,
   isAuth,
@@ -42,8 +41,8 @@ userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
 userRouter.get("/search/user/username", isAuth, getUserByUsername);
 userRouter.post("/user/profile/new-plant", isAuth, upload.single("imgPath"), addPlantToProfile);
 userRouter.put("/profile/plant/:plantId", isAuth, canEditUserPlant, upload.single("imgPath"), editUserPlant);
-userRouter.put("/user/:id", isAuth, canEditUser, editUser);
+userRouter.put("/user/:id", isAuth, canEditOrDeleteUser, editUser);
 userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changePassword);
-userRouter.patch("/user/:id/profile-picture", isAuth, canEditUser, upload.single("imgPath"), uploadProfilePicture);
+userRouter.patch("/user/:id/profile-picture", isAuth, canEditOrDeleteUser, upload.single("imgPath"), uploadProfilePicture);
 userRouter.put("/profile/plant/:plantId", isAuth, canDeleteUserPlant, deleteUserPlant);
-userRouter.delete("/user/:id", isAuth, canDeleteUser, deleteUser);
+userRouter.delete("/user/:id", isAuth, canEditOrDeleteUser, deleteUser);

@@ -1,13 +1,11 @@
 import express from "express";
 import {
   canChangePassword,
-  canDeleteUser,
-  canDeleteUserPlant,
-  canEditUser,
-  canEditUserPlant,
+  canEditOrDeleteUser,
   isAdmin,
   isAuth,
   isUniqueUser,
+  loadUserPlant,
   refreshToken,
 } from "../../middlewares/index.js";
 import {
@@ -24,26 +22,30 @@ import {
   loginUser,
   logoutUser,
   registerUser,
-  uploadProfilePicture,
   verifyUserAuth,
 } from "../controllers/index.js";
 import { upload } from "../../config/index.js";
 
 export const userRouter = express.Router();
 
-userRouter.post("/register", isUniqueUser, registerUser);
-userRouter.post("/login", loginUser);
+// GET
 userRouter.get("/me", isAuth, verifyUserAuth);
-userRouter.post("/refresh", refreshToken);
-userRouter.post("/logout", logoutUser);
 userRouter.get("/search/all-users", isAuth, isAdmin, getAllUsers);
-userRouter.get("/search/user/id", isAuth, isAdmin, getUserById);
+userRouter.get("/:id", isAuth, isAdmin, getUserById);
 userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
 userRouter.get("/search/user/username", isAuth, getUserByUsername);
+// POST
+userRouter.post("/register", isUniqueUser, registerUser);
+userRouter.post("/login", loginUser);
+userRouter.post("/refresh", refreshToken);
+userRouter.post("/logout", logoutUser);
 userRouter.post("/user/profile/new-plant", isAuth, upload.single("imgPath"), addPlantToProfile);
-userRouter.put("/profile/plant/:plantId", isAuth, canEditUserPlant, upload.single("imgPath"), editUserPlant);
-userRouter.put("/user/:id", isAuth, canEditUser, editUser);
+// PUT
+userRouter.put("/user/profile/plant/:plantId", isAuth, loadUserPlant, upload.single("imgPath"), editUserPlant);
+userRouter.put("/user/:id", isAuth, canEditOrDeleteUser, upload.single("imgPath"), editUser);
+// PATCH
 userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changePassword);
-userRouter.patch("/user/:id/profile-picture", isAuth, canEditUser, upload.single("imgPath"), uploadProfilePicture);
-userRouter.put("/profile/plant/:plantId", isAuth, canDeleteUserPlant, deleteUserPlant);
-userRouter.delete("/user/:id", isAuth, canDeleteUser, deleteUser);
+// DELETE
+userRouter.delete("/user/profile/plant/:plantId", isAuth, loadUserPlant, deleteUserPlant);
+userRouter.delete("/user/:id", isAuth, canEditOrDeleteUser, deleteUser);
+

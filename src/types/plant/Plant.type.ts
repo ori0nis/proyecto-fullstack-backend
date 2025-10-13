@@ -10,5 +10,3 @@ export interface Plant {
   imgPublicUrl: string;
   type: "tropical" | "desert" | "temperate" | "alpine" | "aquatic";
 }
-
-export type NewPlant = Omit<Plant, "_id">;

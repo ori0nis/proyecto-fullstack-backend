@@ -1,6 +1,6 @@
 //? Plants that users have in their profiles. Taken from the Plant model
 
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 import { UserPlant } from "../../types/plant/index.js";
 
 const userPlantSchema = new mongoose.Schema<UserPlant>(

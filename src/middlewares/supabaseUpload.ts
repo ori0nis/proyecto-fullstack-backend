@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 
 interface UploadResult {
   imgPath: string;
-  publicUrl: string;
+  imgPublicUrl: string;
 }
 
 export const supabaseUpload = async (file: Express.Multer.File): Promise<UploadResult> => {
@@ -19,5 +19,5 @@ export const supabaseUpload = async (file: Express.Multer.File): Promise<UploadR
 
   const { data } = supabase.storage.from("images").getPublicUrl(filePath);
 
-  return { imgPath: filePath, publicUrl: data.publicUrl };
+  return { imgPath: filePath, imgPublicUrl: data.imgPublicUrl };
 };

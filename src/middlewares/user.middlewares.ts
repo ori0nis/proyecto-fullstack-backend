@@ -147,17 +147,17 @@ export const canChangePassword = async (
   }
 };
 
-//? Users can only edit their plants, admin can edit anyone
-export const canEditUserPlant = async (
+//? Works for confirming UserPlant ownership and allow edition or deletion
+export const loadUserPlant = async (
   req: AuthRequest<{ plantId: string }, {}, Partial<NewUserPlant>>,
   res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { plantId } = req.params;
-    const requester = req.user;
+    const userId = req.user?._id;
 
-    if (!requester) {
+    if (!userId) {
       res.status(401).json({
         message: "Unauthorized",
         status: 401,
@@ -167,11 +167,11 @@ export const canEditUserPlant = async (
       return;
     }
 
-    const userPlant = await UserPlantModel.findById(plantId);
+    const userPlant = await UserPlantModel.findById(plantId).lean<UserPlant>();
 
     if (!userPlant) {
       res.status(404).json({
-        message: "Plant not found",
+        message: "Plant not found or does not belong to user",
         status: 404,
         data: null,
       });
@@ -179,9 +179,9 @@ export const canEditUserPlant = async (
       return;
     }
 
-    if (requester._id.toString() !== userPlant.userId.toString() && requester.role !== "admin") {
+    if (userPlant.userId.toString() !== userId.toString() && req.user?.role !== "admin") {
       res.status(403).json({
-        message: "You can't edit other user's plants",
+        message: "Forbidden. You can't manage other user's plants",
         status: 403,
         data: null,
       });
@@ -196,55 +196,4 @@ export const canEditUserPlant = async (
     next(error);
   }
 };
-
-//? Users can only delete their own plants, admins can delete anyone
-export const canDeleteUserPlant = async (
-  req: AuthRequest<{ plantId: string }>,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { plantId } = req.params;
-    const requester = req.user;
-
-    if (!requester) {
-      res.status(401).json({
-        message: "Unauthorized",
-        status: 401,
-        data: null,
-      });
-
-      return;
-    }
-
-    const userPlant = await UserPlantModel.findById(plantId);
-
-    if (!userPlant) {
-      res.status(404).json({
-        message: "Plant not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
-
-    if (requester._id.toString() !== userPlant.userId.toString() && requester.role !== "admin") {
-      res.status(403).json({
-        message: "You can't delete other user's plants",
-        status: 403,
-        data: null,
-      });
-
-      return;
-    }
-
-    req.userPlant = userPlant;
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
-
 

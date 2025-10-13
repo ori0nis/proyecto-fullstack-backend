@@ -2,13 +2,22 @@
 
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { NewUser, UserResponse, User, LoginUser, PublicUser, UserProfile } from "../../types/user/index.js";
+import {
+  NewUser,
+  UserResponse,
+  User,
+  LoginUser,
+  PublicUser,
+  UserProfile,
+  UpdatedUser,
+} from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateRefreshToken, generateToken, isAllowedImage } from "../../utils/index.js";
 import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.js";
+import { Types } from "mongoose";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -31,12 +40,12 @@ export const getAllUsers = async (
 
 // GET USER BY ID
 export const getUserById = async (
-  req: AuthRequest<{}, {}, {}, { id: string }>,
+  req: AuthRequest<{ id: string }>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.query;
+    const { id } = req.params;
 
     if (!id || id.trim() === "") {
       res.status(400).json({
@@ -300,12 +309,25 @@ export const logoutUser = async (
 
 // EDIT USER
 export const editUser = async (
-  req: AuthRequest<{ id: string }, {}, Partial<NewUser>>,
+  req: AuthRequest<{ id: string }, {}, Partial<UpdatedUser>>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const profilePic = req.file;
+
+    const updates = { ...req.body } as Partial<UpdatedUser>;
+
+    // Role gets deleted if it's somehow sent in the body
+    if ("role" in updates) delete updates.role;
+
+    if (updates.plants) {
+      if (!Array.isArray(updates.plants)) {
+        updates.plants = [updates.plants];
+      }
+    }
+
     const userInDatabase = await UserModel.findById(id);
 
     if (!userInDatabase) {
@@ -318,9 +340,30 @@ export const editUser = async (
       return;
     }
 
-    // Role gets deleted if it's somehow sent in the body
-    const updates = { ...req.body };
-    if ("role" in updates) delete updates.role;
+    // Profile pic logic
+    if (profilePic) {
+      if (userInDatabase.imgPath) {
+        const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+        if (deleteError) console.error(deleteError.message);
+      }
+
+      try {
+        await isAllowedImage(profilePic);
+      } catch (error) {
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Invalid image",
+          status: 400,
+          data: null,
+        });
+
+        return;
+      }
+
+      const { imgPath, imgPublicUrl } = await supabaseUpload(profilePic);
+
+      updates.imgPath = imgPath;
+      updates.imgPublicUrl = imgPublicUrl;
+    }
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
       .populate("userplants")
@@ -406,89 +449,9 @@ export const changePassword = async (
   }
 };
 
-// UPLOAD PROFILE PICTURE
-//? Works both for first upload and for edit
-export const uploadProfilePicture = async (
-  req: AuthRequest<{ id: string }, {}, {}>,
-  res: Response<UserResponse<PublicUser>>,
-  next: NextFunction
-) => {
-  try {
-    const profilePic = req.file;
-    const { id } = req.params;
-
-    if (!profilePic) {
-      res.status(400).json({
-        message: "No file uploaded",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    const userInDatabase = await UserModel.findById(id);
-
-    if (!userInDatabase) {
-      res.status(404).json({
-        message: "User not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
-
-    // If user already had an image (update option), we remove the old one from supabase
-    if (userInDatabase.imgPath) {
-      await supabase.storage.from("images").remove([userInDatabase.imgPath]);
-    }
-
-    try {
-      await isAllowedImage(profilePic);
-    } catch (error) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Invalid image",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    }
-
-    const { imgPath, publicUrl } = await supabaseUpload(profilePic);
-
-    const userUpdated = await UserModel.findByIdAndUpdate(
-      id,
-      { imgPath: imgPath, imgPublicUrl: publicUrl },
-      { new: true }
-    )
-      .populate("userplants")
-      .lean<PublicUser>();
-
-    if (!userUpdated) {
-      res.status(500).json({
-        message: "Error updating profile picture",
-        status: 500,
-        data: null,
-      });
-
-      return;
-    }
-
-    res.status(200).json({
-      message: "Profile picture updated",
-      status: 200,
-      data: userUpdated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ADD NEW PLANT TO USER PROFILE
+// ADD NEW PLANT TO USER PROFILE (preceded by flexiblePlantsearch())
 export const addPlantToProfile = async (
-  req: AuthRequest<{}, {}, { plantId: string; nameByUser: string }>,
+  req: AuthRequest<{}, {}, NewUserPlant>,
   res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
@@ -503,6 +466,8 @@ export const addPlantToProfile = async (
         status: 401,
         data: null,
       });
+
+      return;
     }
 
     const plantInRepository = await PlantModel.findById(plantId);
@@ -529,9 +494,7 @@ export const addPlantToProfile = async (
       return;
     }
 
-    try {
-      await isAllowedImage(plantImg);
-    } catch (error) {
+    await isAllowedImage(plantImg).catch((error) => {
       res.status(400).json({
         message: error instanceof Error ? error.message : "Invalid image",
         status: 400,
@@ -539,11 +502,11 @@ export const addPlantToProfile = async (
       });
 
       return;
-    }
+    });
 
-    const { imgPath, publicUrl } = await supabaseUpload(plantImg);
+    const { imgPath, imgPublicUrl } = await supabaseUpload(plantImg);
 
-    const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: publicUrl });
+    const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: imgPublicUrl });
     const savedUserPlant = await userPlant.save();
 
     await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
@@ -565,20 +528,8 @@ export const editUserPlant = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { plantId } = req.params;
+    const userPlant = req.userPlant!;
     const updates = { ...req.body };
-
-    const userPlant = req.userPlant;
-
-    if (!userPlant) {
-      res.status(404).json({
-        message: "Plant not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
 
     const plantImg = req.file;
     let imgPath = userPlant.imgPath;
@@ -590,19 +541,14 @@ export const editUserPlant = async (
 
         const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 
+        // If supabase deletion fails, we log the error but don't terminate execution
         if (deleteError) {
-          res.status(500).json({
-            message: "Error deleting plant",
-            status: 500,
-            data: null,
-          });
-
-          return;
+          console.error(deleteError.message);
         }
 
         const uploaded = await supabaseUpload(plantImg);
         imgPath = uploaded.imgPath;
-        imgPublicUrl = uploaded.publicUrl;
+        imgPublicUrl = uploaded.imgPublicUrl;
       } catch (error) {
         res.status(400).json({
           message: error instanceof Error ? error.message : "Invalid image",
@@ -615,7 +561,7 @@ export const editUserPlant = async (
     }
 
     const plantUpdated = await UserPlantModel.findByIdAndUpdate(
-      plantId,
+      userPlant._id,
       { ...updates, imgPath, imgPublicUrl },
       { new: true }
     ).lean<UserPlant>();
@@ -637,32 +583,16 @@ export const deleteUserPlant = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { plantId } = req.params;
-    const userPlant = req.userPlant;
-
-    if (!userPlant) {
-      res.status(404).json({
-        message: "Plant not found",
-        status: 404,
-        data: null,
-      });
-
-      return;
-    }
+    const userPlant = req.userPlant!;
 
     const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 
+    // If supabase deletion fails, we log the error but don't terminate execution
     if (deleteError) {
-      res.status(500).json({
-        message: "Error deleting image from Supabase",
-        status: 500,
-        data: null,
-      });
-
-      return;
+      console.error(deleteError.message);
     }
 
-    const plantDeleted = await UserPlantModel.findByIdAndDelete(plantId).lean<UserPlant>();
+    const plantDeleted = await UserPlantModel.findByIdAndDelete(userPlant._id).lean<UserPlant>();
 
     if (!plantDeleted) {
       res.status(500).json({
@@ -674,7 +604,7 @@ export const deleteUserPlant = async (
       return;
     }
 
-    await UserModel.findByIdAndUpdate(userPlant.userId, { $pull: { plants: plantDeleted.plantId } });
+    await UserModel.findByIdAndUpdate(userPlant.userId, { $pull: { plants: plantDeleted._id } });
 
     res.status(200).json({
       message: "Plant deleted",
@@ -695,7 +625,7 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    const userInDatabase = await UserModel.findById(id);
+    const userInDatabase = await UserModel.findById(id).populate("userplants");
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -707,19 +637,14 @@ export const deleteUser = async (
       return;
     }
 
-    const { error } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+    const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
 
-    if (error) {
-      res.status(500).json({
-        message: "Error deleting image from Supabase",
-        status: 500,
-        data: null,
-      });
-
-      return;
+    // If supabase deletion fails, we log the error but don't terminate execution
+    if (deleteError) {
+      console.error(deleteError.message);
     }
 
-    const userDeleted = await UserModel.findByIdAndDelete(id).populate("userplants").lean<PublicUser>();
+    const userDeleted = await UserModel.findByIdAndDelete(id).lean<PublicUser>();
 
     if (!userDeleted) {
       res.status(500).json({

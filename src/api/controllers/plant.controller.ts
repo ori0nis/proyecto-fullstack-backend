@@ -196,6 +196,51 @@ export const getPlantsByCommonName = async (
   }
 };
 
+// GLOBAL SEARCH (perfect for flexible searches and adding plants to user profile)
+export const flexiblePlantSearch = async (
+  req: AuthRequest<{}, {}, {}, { query: string }>,
+  res: Response<PlantResponse<Plant[]>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "" || query.trim().length < 3) {
+      res.status(400).json({
+        message: "Please provide a valid search query",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const plants = await PlantModel.find({
+      $or: [{ scientific_name: { $regex: query, $options: "i" } }, { common_name: { $regex: query, $options: "i" } }],
+    }).limit(10);
+
+    if (!plants.length) {
+      res.status(404).json({
+        message: "No plants found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Plants found",
+      status: 200,
+      data: plants,
+    });
+
+    return;
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST NEW PLANT (UNIVERSAL REPOSITORY)
 export const postNewPlant = async (
   req: AuthRequest<{}, {}, NewPlant>,
@@ -252,13 +297,13 @@ export const postNewPlant = async (
       return;
     }
 
-    const { imgPath, publicUrl } = await supabaseUpload(plantImg);
+    const { imgPath, imgPublicUrl } = await supabaseUpload(plantImg);
 
     const plant = new PlantModel({
       ...req.body,
       scientific_name,
       imgPath,
-      imgPublicUrl: publicUrl,
+      imgPublicUrl: imgPublicUrl,
     });
 
     const plantPosted = await plant.save();
@@ -305,19 +350,14 @@ export const editPlant = async (
 
         const { error: deleteError } = await supabase.storage.from("images").remove([plant.imgPath]);
 
+        // If supabase deletion fails, we log the error but don't terminate execution
         if (deleteError) {
-          res.status(500).json({
-            message: "Error deleting old image from Supabase",
-            status: 500,
-            data: null,
-          });
-
-          return;
+          console.error(deleteError.message);
         }
 
         const uploaded = await supabaseUpload(plantImg);
         imgPath = uploaded.imgPath;
-        imgPublicUrl = uploaded.publicUrl;
+        imgPublicUrl = uploaded.imgPublicUrl;
       } catch (error) {
         res.status(400).json({
           message: error instanceof Error ? error.message : "Invalid image",
@@ -367,14 +407,9 @@ export const deletePlant = async (
 
     const { error: deleteError } = await supabase.storage.from("images").remove([plant.imgPath]);
 
+    // If supabase deletion fails, we log the error but don't terminate execution
     if (deleteError) {
-      res.status(500).json({
-        message: "Error deleting image from Supabase",
-        status: 500,
-        data: null,
-      });
-
-      return;
+      console.error(deleteError.message);
     }
 
     const plantDeleted = await PlantModel.findByIdAndDelete(id).lean<Plant>();

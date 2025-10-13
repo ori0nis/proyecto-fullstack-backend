@@ -19,5 +19,5 @@ export const supabaseUpload = async (file: Express.Multer.File): Promise<UploadR
 
   const { data } = supabase.storage.from("images").getPublicUrl(filePath);
 
-  return { imgPath: filePath, imgPublicUrl: data.imgPublicUrl };
+  return { imgPath: filePath, imgPublicUrl: data.publicUrl };
 };

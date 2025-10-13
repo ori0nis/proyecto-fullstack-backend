@@ -50,6 +50,13 @@ app.use("/", router);
 app.use("/users", userRouter);
 app.use("/plants", plantRouter);
 
+// Route handler
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const error: CustomError = new Error("Route not found");
+  error.status = 404;
+  next(error);
+});
+
 // Port listen
 app.listen(PORT, () => {
   console.log(`🚀 Server running on: http://localhost:${PORT}`);
@@ -60,11 +67,4 @@ app.use((error: CustomError, req: Request, res: Response, next: NextFunction) =>
   const status = error.status || 500;
   const message = error.message || "Unexpected error occurred";
   res.status(status).json({ message });
-});
-
-// Route handler
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const error: CustomError = new Error("Route not found");
-  error.status = 404;
-  next(error);
 });

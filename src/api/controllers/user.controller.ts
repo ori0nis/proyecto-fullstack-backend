@@ -26,7 +26,7 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await UserModel.find().populate("userplants").lean<PublicUser[]>();
+    const users = await UserModel.find().populate("plants").lean<PublicUser[]>();
 
     res.status(200).json({
       message: "Users found",
@@ -57,7 +57,7 @@ export const getUserById = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findById(id).populate("userplants").lean<PublicUser>();
+    const userInDatabase = await UserModel.findById(id).populate("plants").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -98,7 +98,7 @@ export const getUserByEmail = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ email: email }).populate("userplants").lean<PublicUser>();
+    const userInDatabase = await UserModel.findOne({ email: email }).populate("plants").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -139,7 +139,7 @@ export const getUserByUsername = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ username: username }).populate("userplants").lean<UserProfile>();
+    const userInDatabase = await UserModel.findOne({ username: username }).populate("plants").lean<UserProfile>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -173,7 +173,7 @@ export const registerUser = async (
     const user = new UserModel({ username, email, password, plant_care_skill_level, role: "user" });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
-    const savedUser = await (await user.save()).populate("userplants");
+    const savedUser = await (await user.save()).populate("plants");
     const userPosted = savedUser.toObject();
 
     const { password: _password, ...publicUser } = userPosted;
@@ -195,7 +195,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email }).populate("userplants").lean<User>();
+    const user = await UserModel.findOne({ email: req.body.email }).populate("plants").lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -366,7 +366,7 @@ export const editUser = async (
     }
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
-      .populate("userplants")
+      .populate("plants")
       .lean<PublicUser>();
 
     if (!userUpdated) {
@@ -426,7 +426,7 @@ export const changePassword = async (
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
-      .populate("userplants")
+      .populate("plants")
       .lean<PublicUser>();
 
     if (!userUpdated) {
@@ -625,7 +625,7 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    const userInDatabase = await UserModel.findById(id).populate("userplants");
+    const userInDatabase = await UserModel.findById(id).populate("plants");
 
     if (!userInDatabase) {
       res.status(404).json({

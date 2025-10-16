@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema<User>(
       required: [true, "Please provide a password"],
       trim: true,
       minlength: [8, "Password must contain at least 8 characters"],
+      maxLength: [80, "Password is too long"],
       validate: [
         {
           validator: (value: string) => value === value.trim(),

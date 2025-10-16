@@ -17,21 +17,46 @@ import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.js";
-import { Types } from "mongoose";
 
 // GET ALL USERS
 export const getAllUsers = async (
-  req: AuthRequest,
-  res: Response<UserResponse<PublicUser[]>>,
+  req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
+  res: Response<
+    UserResponse<{
+      users: PublicUser[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await UserModel.find().populate("plants").lean<PublicUser[]>();
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await UserModel.countDocuments();
+
+    const users = await UserModel.find().populate("plants").skip(skip).limit(limit).lean<PublicUser[]>();
+
+    const hasMore = skip + users.length < total;
 
     res.status(200).json({
       message: "Users found",
       status: 200,
-      data: users,
+      data: {
+        users,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);

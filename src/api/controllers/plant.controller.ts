@@ -1,4 +1,4 @@
-//? req.user is always double checked even after passing isAuth(), as a good practice. Mongoose documents are returned with .lean() so that they're in plain object format and can be assigned as PlantType
+//? Mongoose documents are returned with .lean() so that they're in plain object format and can be assigned as PlantType
 
 import { type Response, type NextFunction } from "express";
 import { supabase } from "../../config/index.js";
@@ -10,17 +10,43 @@ import { PlantModel } from "./../models/index.js";
 
 // GET ALL PLANTS
 export const getAllPlants = async (
-  req: AuthRequest,
-  res: Response<PlantResponse<Plant[]>>,
+  req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      plants: Plant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const plants = await PlantModel.find().lean<Plant[]>();
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await PlantModel.countDocuments();
+
+    const plants = await PlantModel.find().skip(skip).limit(limit).lean<Plant[]>();
+
+    const hasMore = skip + plants.length < total;
 
     res.status(200).json({
       message: "Plants found",
       status: 200,
-      data: plants,
+      data: {
+        plants,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);
@@ -68,10 +94,15 @@ export const getPlantById = async (
   }
 };
 
-// GET PLANT BY SCIENTIFIC NAME
+// GET PLANTS BY SCIENTIFIC NAME
 export const getPlantsByScientificName = async (
-  req: AuthRequest<{}, {}, {}, { scientific_name: string }>,
-  res: Response<PlantResponse<Plant[]>>,
+  req: AuthRequest<{}, {}, {}, { scientific_name: string; page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      plants: Plant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -87,9 +118,28 @@ export const getPlantsByScientificName = async (
       return;
     }
 
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await PlantModel.countDocuments();
+
     const plants = await PlantModel.find({
       scientific_name: { $regex: new RegExp(scientific_name.trim(), "i") },
-    }).lean<Plant[]>();
+    })
+      .skip(skip)
+      .limit(limit)
+      .lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -101,20 +151,30 @@ export const getPlantsByScientificName = async (
       return;
     }
 
+    const hasMore = skip + plants.length < total;
+
     res.status(200).json({
       message: "Plants found",
       status: 200,
-      data: plants,
+      data: {
+        plants,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-// GET PLANT BY TYPE
+// GET PLANTS BY TYPE
 export const getPlantsByType = async (
-  req: AuthRequest<{}, {}, {}, { type: string }>,
-  res: Response<PlantResponse<Plant[]>>,
+  req: AuthRequest<{}, {}, {}, { type: string; page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      plants: Plant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -131,7 +191,23 @@ export const getPlantsByType = async (
       return;
     }
 
-    const plants = await PlantModel.find({ type: type.toLowerCase() }).lean<Plant[]>();
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await PlantModel.countDocuments();
+
+    const plants = await PlantModel.find({ type: type.toLowerCase() }).skip(skip).limit(limit).lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -143,20 +219,30 @@ export const getPlantsByType = async (
       return;
     }
 
+    const hasMore = skip + plants.length < total;
+
     res.status(200).json({
       message: "Plants found",
       status: 200,
-      data: plants,
+      data: {
+        plants,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-// GET PLANT BY COMMON NAME
+// GET PLANTS BY COMMON NAME
 export const getPlantsByCommonName = async (
-  req: AuthRequest<{}, {}, {}, { common_name: string }>,
-  res: Response<PlantResponse<Plant[]>>,
+  req: AuthRequest<{}, {}, {}, { common_name: string; page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      plants: Plant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -172,9 +258,28 @@ export const getPlantsByCommonName = async (
       return;
     }
 
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await PlantModel.countDocuments();
+
     const plants = await PlantModel.find({
       common_name: { $regex: new RegExp(common_name.trim(), "i") },
-    }).lean<Plant[]>();
+    })
+      .skip(skip)
+      .limit(limit)
+      .lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -186,10 +291,15 @@ export const getPlantsByCommonName = async (
       return;
     }
 
+    const hasMore = skip + plants.length < total;
+
     res.status(200).json({
       message: "Plants found",
       status: 200,
-      data: plants,
+      data: {
+        plants,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);
@@ -198,8 +308,13 @@ export const getPlantsByCommonName = async (
 
 // GLOBAL SEARCH (perfect for flexible searches and adding plants to user profile)
 export const flexiblePlantSearch = async (
-  req: AuthRequest<{}, {}, {}, { query: string }>,
-  res: Response<PlantResponse<Plant[]>>,
+  req: AuthRequest<{}, {}, {}, { query: string; page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      plants: Plant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -215,9 +330,28 @@ export const flexiblePlantSearch = async (
       return;
     }
 
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await PlantModel.countDocuments();
+
     const plants = await PlantModel.find({
       $or: [{ scientific_name: { $regex: query, $options: "i" } }, { common_name: { $regex: query, $options: "i" } }],
-    }).limit(10);
+    })
+      .skip(skip)
+      .limit(limit)
+      .lean<Plant[]>();
 
     if (!plants.length) {
       res.status(404).json({
@@ -229,10 +363,15 @@ export const flexiblePlantSearch = async (
       return;
     }
 
+    const hasMore = skip + plants.length < total;
+
     res.status(200).json({
       message: "Plants found",
       status: 200,
-      data: plants,
+      data: {
+        plants,
+        meta: { page, limit, total, hasMore },
+      },
     });
 
     return;

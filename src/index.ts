@@ -12,6 +12,7 @@ interface CustomError extends Error {
 // Dotenv and port
 dotenv.config();
 const PORT = process.env.APP_PORT || 4000;
+export const isProduction = process.env.NODE_ENV === "production";
 
 // App, mongoose and supabase
 const app = express();

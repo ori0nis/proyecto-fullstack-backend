@@ -1,16 +1,12 @@
 import { Response, NextFunction, RequestHandler } from "express";
-import { UserResponse, PublicUser, User } from "../types/user/index.js";
+import { UserResponse, User, SingleUserResponse } from "../types/user/index.js";
 import { generateToken, verifyToken } from "../utils/index.js";
 import { UserModel } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
 import { isProduction } from "../index.js";
 
 // AUTHENTICATION
-export const isAuth: RequestHandler = async (
-  req: AuthRequest,
-  res: Response<UserResponse<PublicUser>>,
-  next: NextFunction
-): Promise<void> => {
+export const isAuth: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.cookies.token;
 
@@ -50,7 +46,7 @@ export const isAuth: RequestHandler = async (
 // TOKEN REFRESH
 export const refreshToken = async (
   req: AuthRequest,
-  res: Response<UserResponse<PublicUser>>,
+  res: Response<UserResponse<SingleUserResponse>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -102,10 +98,14 @@ export const refreshToken = async (
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    const { password, ...publicUser } = user;
+
     res.status(200).json({
       message: "Token refreshed successfully",
       status: 200,
-      data: null,
+      data: {
+        user: publicUser,
+      },
     });
   } catch (error) {
     next(error);

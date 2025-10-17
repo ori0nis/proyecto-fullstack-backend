@@ -34,17 +34,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS
-const allowedOrigins = ["http://localhost:5173", "https://myplants-backend.onrender.com"];
+const allowedOrigins = ["http://localhost:5173", "https://myplants-backend.onrender.com"]; // TODO: Add deployment URL in the future
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
   })
 );

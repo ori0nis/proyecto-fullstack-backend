@@ -220,7 +220,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email }).populate("plants").lean<User>();
+    const user = await UserModel.findOne({ email: req.body.email }).populate("plants")/* .lean<User>() */;
 
     if (!user) {
       res.status(401).json({
@@ -243,6 +243,8 @@ export const loginUser = async (
 
       return;
     }
+
+    console.log("Logging in user:", user._id.toString(), user.email);
 
     const token = generateToken({
       _id: user._id.toString(),

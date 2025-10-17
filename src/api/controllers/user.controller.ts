@@ -17,6 +17,7 @@ import { AuthRequest } from "../../types/jwt/index.js";
 import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.js";
+import { isProduction } from "../../index.js";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -220,7 +221,7 @@ export const loginUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email }).populate("plants")/* .lean<User>() */;
+    const user = await UserModel.findOne({ email: req.body.email }).populate("plants");
 
     if (!user) {
       res.status(401).json({
@@ -244,8 +245,6 @@ export const loginUser = async (
       return;
     }
 
-    console.log("Logging in user:", user._id.toString(), user.email);
-
     const token = generateToken({
       _id: user._id.toString(),
       role: user.role,
@@ -258,15 +257,15 @@ export const loginUser = async (
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

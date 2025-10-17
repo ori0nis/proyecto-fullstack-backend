@@ -3,6 +3,7 @@ import { UserResponse, PublicUser, User } from "../types/user/index.js";
 import { generateToken, verifyToken } from "../utils/index.js";
 import { UserModel } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
+import { isProduction } from "../index.js";
 
 // AUTHENTICATION
 export const isAuth: RequestHandler = async (
@@ -96,8 +97,8 @@ export const refreshToken = async (
 
     res.cookie("token", newAccessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

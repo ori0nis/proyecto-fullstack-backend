@@ -5,11 +5,12 @@ import { Request, Response, NextFunction } from "express";
 import {
   NewUser,
   UserResponse,
-  User,
   LoginUser,
   PublicUser,
   UserProfile,
   UpdatedUser,
+  SingleUserResponse,
+  User,
 } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
 import { generateRefreshToken, generateToken, isAllowedImage } from "../../utils/index.js";
@@ -217,11 +218,11 @@ export const registerUser = async (
 // LOGIN
 export const loginUser = async (
   req: Request<{}, {}, LoginUser>,
-  res: Response<UserResponse<PublicUser>>,
+  res: Response<UserResponse<SingleUserResponse>>,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email }).populate("plants");
+    const user = await UserModel.findOne({ email: req.body.email }).populate("plants").lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -274,7 +275,9 @@ export const loginUser = async (
     res.status(200).json({
       message: "User logged in with token",
       status: 200,
-      data: publicUser,
+      data: { 
+        user: publicUser 
+      },
     });
   } catch (error) {
     next(error);
@@ -284,7 +287,7 @@ export const loginUser = async (
 // VERIFY USER AUTH (USED BY THE CUSTOM HOOK IN THE FRONTEND)
 export const verifyUserAuth = async (
   req: AuthRequest,
-  res: Response<UserResponse<PublicUser>>,
+  res: Response<UserResponse<SingleUserResponse>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -303,7 +306,9 @@ export const verifyUserAuth = async (
     res.status(200).json({
       message: "Authenticated user",
       status: 200,
-      data: user,
+      data: {
+        user: user
+      }
     });
   } catch (error) {
     next(error);

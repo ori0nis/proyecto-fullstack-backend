@@ -275,8 +275,8 @@ export const loginUser = async (
     res.status(200).json({
       message: "User logged in with token",
       status: 200,
-      data: { 
-        user: publicUser 
+      data: {
+        user: publicUser,
       },
     });
   } catch (error) {
@@ -307,8 +307,8 @@ export const verifyUserAuth = async (
       message: "Authenticated user",
       status: 200,
       data: {
-        user: user
-      }
+        user: user,
+      },
     });
   } catch (error) {
     next(error);
@@ -474,6 +474,67 @@ export const changePassword = async (
       message: "Password successfully changed",
       status: 200,
       data: userUpdated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET USER PLANTS
+export const getUserPlants = async (
+  req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
+  res: Response<
+    PlantResponse<{
+      userPlants: UserPlant[];
+      meta: { page: number; limit: number; total: number; hasMore: boolean };
+    }>
+  >,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await UserPlantModel.countDocuments({ userId });
+
+    const userPlants = await UserPlantModel.find({ userId })
+      .populate("plantId")
+      .skip(skip)
+      .limit(limit)
+      .lean<UserPlant[]>();
+
+    if (!userPlants) {
+      res.status(404).json({
+        message: "No plants in your profile. Add some now!",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const hasMore = skip + userPlants.length < total;
+
+    res.status(200).json({
+      message: "Plants found",
+      status: 200,
+      data: {
+        userPlants,
+        meta: { page, limit, total, hasMore },
+      },
     });
   } catch (error) {
     next(error);

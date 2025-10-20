@@ -1,9 +1,9 @@
-# Dependencias
+# Dependencies
 node_modules/
 
-# Archivos de build
+# Build files
 dist/
 build/
 
-# Variables de entorno
+# Environment variables
 .env

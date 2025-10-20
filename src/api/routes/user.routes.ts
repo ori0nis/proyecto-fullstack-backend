@@ -19,6 +19,7 @@ import {
   getUserByEmail,
   getUserById,
   getUserByUsername,
+  getUserPlants,
   loginUser,
   logoutUser,
   registerUser,
@@ -34,6 +35,7 @@ userRouter.get("/search/all-users", isAuth, isAdmin, getAllUsers);
 userRouter.get("/:id", isAuth, isAdmin, getUserById);
 userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
 userRouter.get("/search/user/username", isAuth, getUserByUsername);
+userRouter.get("/user/profile/plants", isAuth, getUserPlants);
 // POST
 userRouter.post("/register", isUniqueUser, registerUser);
 userRouter.post("/login", loginUser);
@@ -48,4 +50,3 @@ userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changeP
 // DELETE
 userRouter.delete("/user/profile/plant/:plantId", isAuth, loadUserPlant, deleteUserPlant);
 userRouter.delete("/user/:id", isAuth, canEditOrDeleteUser, deleteUser);
-

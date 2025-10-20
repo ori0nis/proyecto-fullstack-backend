@@ -8,7 +8,7 @@ import { NewPlant, PlantResponse, Plant } from "../../types/plant/index.js";
 import { isAllowedImage, isValidScientificName } from "../../utils/index.js";
 import { PlantModel } from "./../models/index.js";
 
-// GET ALL PLANTS
+// GET ALL PLANTS (UNIVERSAL REPOSITORY)
 export const getAllPlants = async (
   req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
   res: Response<
@@ -94,7 +94,7 @@ export const getPlantById = async (
   }
 };
 
-// GET PLANTS BY SCIENTIFIC NAME
+// GET PLANTS BY SCIENTIFIC NAME (UNIVERSAL REPOSITORY)
 export const getPlantsByScientificName = async (
   req: AuthRequest<{}, {}, {}, { scientific_name: string; page?: string; limit?: string }>,
   res: Response<
@@ -166,7 +166,7 @@ export const getPlantsByScientificName = async (
   }
 };
 
-// GET PLANTS BY TYPE
+// GET PLANTS BY TYPE (UNIVERSAL REPOSITORY)
 export const getPlantsByType = async (
   req: AuthRequest<{}, {}, {}, { type: string; page?: string; limit?: string }>,
   res: Response<
@@ -234,7 +234,7 @@ export const getPlantsByType = async (
   }
 };
 
-// GET PLANTS BY COMMON NAME
+// GET PLANTS BY COMMON NAME (UNIVERSAL REPOSITORY)
 export const getPlantsByCommonName = async (
   req: AuthRequest<{}, {}, {}, { common_name: string; page?: string; limit?: string }>,
   res: Response<

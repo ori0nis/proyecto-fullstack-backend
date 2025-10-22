@@ -306,7 +306,7 @@ export const getPlantsByCommonName = async (
   }
 };
 
-// GLOBAL SEARCH (perfect for flexible searches and adding plants to user profile)
+// FLEXIBLE SEARCH (perfect for adding plants to user profile)
 export const flexiblePlantSearch = async (
   req: AuthRequest<{}, {}, {}, { query: string; page?: string; limit?: string }>,
   res: Response<

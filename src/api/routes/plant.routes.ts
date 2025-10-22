@@ -19,12 +19,12 @@ import { upload } from "../../config/index.js";
 export const plantRouter = express.Router();
 
 // GET
+plantRouter.get("/search", isAuth, flexiblePlantSearch);
 plantRouter.get("/all-plants", isAuth, getAllPlants);
-plantRouter.get("/:id", isAuth, getPlantById);
+plantRouter.get("/plant/:id", isAuth, getPlantById);
 plantRouter.get("/search/scientific-name", isAuth, getPlantsByScientificName);
 plantRouter.get("/search/type", isAuth, getPlantsByType);
 plantRouter.get("/search/common-name", isAuth, getPlantsByCommonName);
-plantRouter.get("/search", isAuth, flexiblePlantSearch);
 // POST
 plantRouter.post("/new-plant", isAuth, upload.single("imgPath"), postNewPlant);
 // PUT

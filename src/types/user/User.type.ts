@@ -17,7 +17,7 @@ export interface User {
 //? Type for the user format sent by the user in register request
 export type NewUser = Omit<User, "_id" | "role" | "imgPath" | "imgPublicUrl">;
 //? Type for user update
-export type UpdatedUser = Omit<User, "_id" | "role" | "password">
+export type UpdatedUser = Omit<User, "_id" | "role" | "password" | "plants">
 //? Type for all API responses
 export type PublicUser = Omit<User, "password">;
 //? Type for search by username response

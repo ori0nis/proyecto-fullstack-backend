@@ -353,12 +353,6 @@ export const editUser = async (
     // Role gets deleted if it's somehow sent in the body
     if ("role" in updates) delete updates.role;
 
-    if (updates.plants) {
-      if (!Array.isArray(updates.plants)) {
-        updates.plants = [updates.plants];
-      }
-    }
-
     const userInDatabase = await UserModel.findById(id);
 
     if (!userInDatabase) {

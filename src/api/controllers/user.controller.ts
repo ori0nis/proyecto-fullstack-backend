@@ -454,6 +454,16 @@ export const changePassword = async (
       return;
     }
 
+    if (oldPassword === newPassword) {
+      res.status(400).json({
+        message: "New password must be different from the old one",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })

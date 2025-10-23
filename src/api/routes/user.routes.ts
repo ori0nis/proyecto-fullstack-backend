@@ -4,7 +4,8 @@ import {
   canEditOrDeleteUser,
   isAdmin,
   isAuth,
-  isUniqueUser,
+  isUniqueUserOnProfileEdit,
+  isUniqueUserOnRegister,
   loadUserPlant,
   refreshToken,
 } from "../../middlewares/index.js";
@@ -37,14 +38,14 @@ userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
 userRouter.get("/search/user/username", isAuth, getUserByUsername);
 userRouter.get("/user/profile/plants", isAuth, getUserPlants);
 // POST
-userRouter.post("/register", isUniqueUser, registerUser);
+userRouter.post("/register", isUniqueUserOnRegister, registerUser);
 userRouter.post("/login", loginUser);
 userRouter.post("/refresh", refreshToken);
 userRouter.post("/logout", logoutUser);
 userRouter.post("/user/profile/new-plant", isAuth, upload.single("imgPath"), addPlantToProfile);
 // PUT
 userRouter.put("/user/profile/plant/:plantId", isAuth, loadUserPlant, upload.single("imgPath"), editUserPlant);
-userRouter.put("/user/:id", isAuth, canEditOrDeleteUser, upload.single("imgPath"), editUser);
+userRouter.put("/user/:id", isAuth, canEditOrDeleteUser, isUniqueUserOnProfileEdit, upload.single("imgPath"), editUser);
 // PATCH
 userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changePassword);
 // DELETE

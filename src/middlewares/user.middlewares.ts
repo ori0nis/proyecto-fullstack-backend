@@ -46,8 +46,8 @@ export const canEditOrDeleteUser = (action: ActionType) => {
   };
 };
 
-//? Checks what the mongoose model can't (unique username and email)
-export const isUniqueUser = async (
+//? Checks that username and email are unique upon register
+export const isUniqueUserOnRegister = async (
   req: Request<{}, {}, NewUser>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
@@ -77,6 +77,48 @@ export const isUniqueUser = async (
     }
 
     next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+//? Checks that username and email are unique upon user profile edit
+export const isUniqueUserOnProfileEdit = async (
+  req: Request<{ id: string }>,
+  res: Response<UserResponse<PublicUser>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { email, username } = req.body;
+
+    if (email) {
+      const emailExists = await UserModel.findOne({ email });
+      if (emailExists && emailExists._id.toString() !== id) {
+        res.status(409).json({
+          message: "An account with that email already exists",
+          status: 409,
+          data: null,
+        });
+
+        return;
+      }
+    }
+
+    if (username) {
+      const usernameExists = await UserModel.findOne({ username });
+      if (usernameExists && usernameExists._id.toString() !== id) {
+        res.status(409).json({
+          message: "Username is already taken",
+          status: 409,
+          data: null,
+        });
+
+        return;
+      }
+    }
+
+    next()
   } catch (error) {
     next(error);
   }
@@ -196,4 +238,3 @@ export const loadUserPlant = async (
     next(error);
   }
 };
-

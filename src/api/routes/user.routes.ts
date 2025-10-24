@@ -18,6 +18,7 @@ import {
   editUser,
   editUserPlant,
   getAllUsers,
+  getCurrentUser,
   getUserByEmail,
   getUserById,
   getUserByUsername,
@@ -25,14 +26,13 @@ import {
   loginUser,
   logoutUser,
   registerUser,
-  verifyUserAuth,
 } from "../controllers/index.js";
 import { upload } from "../../config/index.js";
 
 export const userRouter = express.Router();
 
 // GET
-userRouter.get("/me", isAuth, verifyUserAuth);
+userRouter.get("/me", isAuth, getCurrentUser);
 userRouter.get("/search/all-users", isAuth, isAdmin, getAllUsers);
 userRouter.get("/:id", isAuth, isAdmin, getUserById);
 userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);

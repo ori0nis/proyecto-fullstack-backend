@@ -48,7 +48,12 @@ export const getAllUsers = async (
     const skip = (page - 1) * limit;
     const total = await UserModel.countDocuments();
 
-    const users = await UserModel.find().populate("plants").select("-password").skip(skip).limit(limit).lean<PublicUser[]>();
+    const users = await UserModel.find()
+      .populate("plants")
+      .select("-password")
+      .skip(skip)
+      .limit(limit)
+      .lean<PublicUser[]>();
 
     const hasMore = skip + users.length < total;
 
@@ -125,7 +130,10 @@ export const getUserByEmail = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ email: email }).populate("plants").select("-password").lean<PublicUser>();
+    const userInDatabase = await UserModel.findOne({ email: email })
+      .populate("plants")
+      .select("-password")
+      .lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -166,7 +174,10 @@ export const getUserByUsername = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ username: username }).select("username plant_care_skill_level plants -_id").populate("plants").lean<UserProfile>();
+    const userInDatabase = await UserModel.findOne({ username: username })
+      .select("username plant_care_skill_level plants -_id")
+      .populate("plants")
+      .lean<UserProfile>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -188,6 +199,10 @@ export const getUserByUsername = async (
   }
 };
 
+const DEFAULT_IMG_PATH = "users/user-placeholder.png";
+const DEFAULT_IMG_PUBLIC_URL =
+  "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/users/user-placeholder.png";
+
 // REGISTER
 export const registerUser = async (
   req: Request<{}, {}, NewUser>,
@@ -195,9 +210,13 @@ export const registerUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { username, email, password, plant_care_skill_level } = req.body;
     // Role is enforced again to avoid overwrites
-    const user = new UserModel({ username, email, password, plant_care_skill_level, role: "user" });
+    const user = new UserModel({
+      ...req.body,
+      role: "user",
+      imgPath: DEFAULT_IMG_PATH,
+      imgPublicUrl: DEFAULT_IMG_PUBLIC_URL,
+    });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
     const savedUser = await (await user.save()).populate("plants");
@@ -270,7 +289,7 @@ export const loginUser = async (
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    const {password, ...publicUser} = user;
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "User logged in with token",
@@ -285,7 +304,7 @@ export const loginUser = async (
 };
 
 // VERIFY USER AUTH (used by AuthContext in the frontend)
-export const verifyUserAuth = async (
+export const getCurrentUser = async (
   req: AuthRequest,
   res: Response<UserResponse<SingleUserResponse>>,
   next: NextFunction
@@ -303,7 +322,7 @@ export const verifyUserAuth = async (
       return;
     }
 
-    const {password, ...publicUser} = user;
+    const { password, ...publicUser } = user;
 
     res.status(200).json({
       message: "Authenticated user",
@@ -396,7 +415,10 @@ export const editUser = async (
       }
     }
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true }).populate("plants").select("-password").lean<PublicUser>();
+    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
+      .populate("plants")
+      .select("-password")
+      .lean<PublicUser>();
 
     if (!userUpdated) {
       res.status(500).json({

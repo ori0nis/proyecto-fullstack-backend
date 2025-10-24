@@ -284,7 +284,7 @@ export const loginUser = async (
   }
 };
 
-// VERIFY USER AUTH (USED BY THE CUSTOM HOOK IN THE FRONTEND)
+// VERIFY USER AUTH (used by AuthContext in the frontend)
 export const verifyUserAuth = async (
   req: AuthRequest,
   res: Response<UserResponse<SingleUserResponse>>,
@@ -346,9 +346,7 @@ export const editUser = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const profilePic = req.file;
-
-    const updates = { ...req.body } as Partial<UpdatedUser>;
+    const updates = { ...req.body };
 
     // Role gets deleted if it's somehow sent in the body
     if ("role" in updates) delete updates.role;
@@ -365,15 +363,26 @@ export const editUser = async (
       return;
     }
 
+    console.log(userInDatabase);
+
+    const profilePic = req.file;
+    let imgPath = userInDatabase.imgPath;
+    let imgPublicUrl = userInDatabase.imgPublicUrl;
+
     // Profile pic logic
     if (profilePic) {
-      if (userInDatabase.imgPath) {
-        const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
-        if (deleteError) console.error(deleteError.message);
-      }
-
       try {
         await isAllowedImage(profilePic);
+
+        if (userInDatabase.imgPath) {
+          const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+
+          if (deleteError) console.error(deleteError.message);
+        }
+
+        const uploaded = await supabaseUpload(profilePic);
+        imgPath = uploaded.imgPath;
+        imgPublicUrl = uploaded.imgPublicUrl;
       } catch (error) {
         res.status(400).json({
           message: error instanceof Error ? error.message : "Invalid image",
@@ -383,11 +392,6 @@ export const editUser = async (
 
         return;
       }
-
-      const { imgPath, imgPublicUrl } = await supabaseUpload(profilePic);
-
-      updates.imgPath = imgPath;
-      updates.imgPublicUrl = imgPublicUrl;
     }
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })

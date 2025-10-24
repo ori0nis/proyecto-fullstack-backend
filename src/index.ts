@@ -17,6 +17,7 @@ export const isProduction = process.env.NODE_ENV === "production";
 // App, mongoose and supabase
 const app = express();
 mongooseConnection();
+
 (async () => {
   const { data, error } = await supabase.storage.listBuckets();
 
@@ -29,6 +30,12 @@ mongooseConnection();
     );
   }
 })();
+
+// Global log for all requests
+app.use((req, res, next) => {
+  console.log("💬 New request:", req.method, req.path, req.headers["content-type"]);
+  next();
+});
 
 // Response handlers and cookies
 app.use(express.json());

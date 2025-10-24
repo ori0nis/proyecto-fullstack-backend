@@ -46,6 +46,56 @@ export const canEditOrDeleteUser = (action: ActionType) => {
   };
 };
 
+//? Check user password (for confirming profile edits)
+export const checkUserPassword = async (
+  req: AuthRequest,
+  res: Response<UserResponse<PublicUser>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    const { currentPassword } = req.body;
+
+    if (!currentPassword) {
+      res.status(400).json({
+        message: "Password is required to complete this action",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+
+    if (!passwordMatches) {
+      res.status(401).json({
+        message: "Password is incorrect",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 //? Checks that username and email are unique upon register
 export const isUniqueUserOnRegister = async (
   req: Request<{}, {}, NewUser>,
@@ -118,7 +168,7 @@ export const isUniqueUserOnProfileEdit = async (
       }
     }
 
-    next()
+    next();
   } catch (error) {
     next(error);
   }

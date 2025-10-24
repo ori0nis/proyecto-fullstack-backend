@@ -1,5 +1,5 @@
 import { Response, NextFunction, RequestHandler } from "express";
-import { UserResponse, User, SingleUserResponse } from "../types/user/index.js";
+import { UserResponse, User, SingleUserResponse, PublicUser } from "../types/user/index.js";
 import { generateToken, verifyToken } from "../utils/index.js";
 import { UserModel } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
@@ -21,7 +21,7 @@ export const isAuth: RequestHandler = async (req: AuthRequest, res: Response, ne
     }
 
     const decoded = verifyToken({ token }) as JWTPayload;
-    const user = await UserModel.findById(decoded._id).lean<User>();
+    const user = await UserModel.findById(decoded._id).lean<PublicUser>();
 
     if (!user) {
       res.status(401).json({
@@ -33,9 +33,7 @@ export const isAuth: RequestHandler = async (req: AuthRequest, res: Response, ne
       return;
     }
 
-    const { password, ...publicUser } = user;
-
-    req.user = publicUser;
+    req.user = user;
 
     next();
   } catch (error) {

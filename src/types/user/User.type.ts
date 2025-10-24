@@ -14,11 +14,8 @@ export interface User {
   plants: Types.ObjectId[];
 }
 
-//? Type for the user format sent by the user in register request
-export type NewUser = Omit<User, "_id" | "role" | "imgPath" | "imgPublicUrl" | "plants">;
+// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 //? Type for user update
 export type UpdatedUser = Omit<User, "_id" | "role" | "password" | "plants">
-//? Type for all API responses
-export type PublicUser = Omit<User, "password">;
 //? Type for search by username response
 export type UserProfile = Pick<User, "username" | "plant_care_skill_level" | "plants">;

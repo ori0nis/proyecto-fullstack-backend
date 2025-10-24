@@ -48,7 +48,7 @@ export const getAllUsers = async (
     const skip = (page - 1) * limit;
     const total = await UserModel.countDocuments();
 
-    const users = await UserModel.find().populate("plants").skip(skip).limit(limit).lean<PublicUser[]>();
+    const users = await UserModel.find().populate("plants").select("-password").skip(skip).limit(limit).lean<PublicUser[]>();
 
     const hasMore = skip + users.length < total;
 
@@ -84,7 +84,7 @@ export const getUserById = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findById(id).populate("plants").lean<PublicUser>();
+    const userInDatabase = await UserModel.findById(id).populate("plants").select("-password").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -125,7 +125,7 @@ export const getUserByEmail = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ email: email }).populate("plants").lean<PublicUser>();
+    const userInDatabase = await UserModel.findOne({ email: email }).populate("plants").select("-password").lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -166,7 +166,7 @@ export const getUserByUsername = async (
       return;
     }
 
-    const userInDatabase = await UserModel.findOne({ username: username }).populate("plants").lean<UserProfile>();
+    const userInDatabase = await UserModel.findOne({ username: username }).select("username plant_care_skill_level plants -_id").populate("plants").lean<UserProfile>();
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -270,7 +270,7 @@ export const loginUser = async (
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    const { password, ...publicUser } = user;
+    const {password, ...publicUser} = user;
 
     res.status(200).json({
       message: "User logged in with token",
@@ -303,11 +303,13 @@ export const verifyUserAuth = async (
       return;
     }
 
+    const {password, ...publicUser} = user;
+
     res.status(200).json({
       message: "Authenticated user",
       status: 200,
       data: {
-        user: user,
+        user: publicUser,
       },
     });
   } catch (error) {
@@ -394,9 +396,7 @@ export const editUser = async (
       }
     }
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
-      .populate("plants")
-      .lean<PublicUser>();
+    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true }).populate("plants").select("-password").lean<PublicUser>();
 
     if (!userUpdated) {
       res.status(500).json({
@@ -466,6 +466,7 @@ export const changePassword = async (
 
     const userUpdated = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword }, { new: true })
       .populate("plants")
+      .select("-password")
       .lean<PublicUser>();
 
     if (!userUpdated) {
@@ -725,7 +726,7 @@ export const deleteUser = async (
   try {
     const { id } = req.params;
 
-    const userInDatabase = await UserModel.findById(id).populate("plants");
+    const userInDatabase = await UserModel.findById(id).populate("plants").select("-password");
 
     if (!userInDatabase) {
       res.status(404).json({
@@ -744,7 +745,7 @@ export const deleteUser = async (
       console.error(deleteError.message);
     }
 
-    const userDeleted = await UserModel.findByIdAndDelete(id).lean<PublicUser>();
+    const userDeleted = await UserModel.findByIdAndDelete(id).select("-password").lean<PublicUser>();
 
     if (!userDeleted) {
       res.status(500).json({

@@ -1,5 +1,5 @@
 import { Response, NextFunction, RequestHandler } from "express";
-import { UserResponse, User, SingleUserResponse, PublicUser } from "../types/user/index.js";
+import { UserResponse, User, SingleUserResponse } from "../types/user/index.js";
 import { generateToken, verifyToken } from "../utils/index.js";
 import { UserModel } from "../api/models/index.js";
 import { AuthRequest, JWTPayload } from "../types/jwt/index.js";
@@ -21,7 +21,7 @@ export const isAuth: RequestHandler = async (req: AuthRequest, res: Response, ne
     }
 
     const decoded = verifyToken({ token }) as JWTPayload;
-    const user = await UserModel.findById(decoded._id).lean<PublicUser>();
+    const user = await UserModel.findById(decoded._id).select("-password").lean<User>();
 
     if (!user) {
       res.status(401).json({
@@ -72,7 +72,7 @@ export const refreshToken = async (
       return;
     }
 
-    const user = await UserModel.findById(decoded._id);
+    const user = await UserModel.findById(decoded._id).select("-password");
 
     if (!user) {
       res.status(404).json({
@@ -96,13 +96,11 @@ export const refreshToken = async (
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    const { password, ...publicUser } = user;
-
     res.status(200).json({
       message: "Token refreshed successfully",
       status: 200,
       data: {
-        user: publicUser,
+        user: user,
       },
     });
   } catch (error) {

@@ -14,7 +14,6 @@ export interface User {
   plants: Types.ObjectId[];
 }
 
-// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 //? Type for user update
 export type UpdatedUser = Omit<User, "_id" | "role" | "password" | "plants">
 //? Type for search by username response

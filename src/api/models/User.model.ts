@@ -1,6 +1,7 @@
 import mongoose, { Types } from "mongoose";
 import bcrypt from "bcrypt";
 import { User } from "../../types/user/index.js";
+import { UserPlantModel } from "./UserPlant.model.js";
 
 const lowSecurityPassword: string[] = ["123", "abc", "qwerty", "password", "admin", "user", "login"];
 
@@ -77,14 +78,42 @@ const userSchema = new mongoose.Schema<User>(
   }
 );
 
+// Password hash
 userSchema.pre("save", async function (next) {
   try {
     if (this.isModified("password")) {
       this.password = await bcrypt.hash(this.password, 10);
+
       next();
     }
   } catch (error) {
     next(error as Error);
+  }
+});
+
+// Cascade to delete associated UserPlant(s) when User is deleted
+userSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+  try {
+    const userId = this._id;
+    await UserPlantModel.deleteMany({ userId });
+
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
+// Cascade to delete many users along with their plants
+userSchema.pre("deleteMany", async function (next) {
+  try {
+    const usersToDelete = await this.model.find(this.getFilter());
+    const userIds = usersToDelete.map((user) => user._id);
+
+    await UserPlantModel.deleteMany({ userId: { $in: userIds } });
+
+    next();
+  } catch (error) {
+    error as Error;
   }
 });
 

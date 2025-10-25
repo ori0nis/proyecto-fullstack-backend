@@ -144,7 +144,18 @@ export const isUniqueUserOnProfileEdit = async (
 
     if (email) {
       const emailExists = await UserModel.findOne({ email });
-      if (emailExists && emailExists._id.toString() !== id) {
+
+      if (emailExists) {
+        if (emailExists._id.toString() === id) {
+          res.status(400).json({
+            message: "You're already using that email",
+            status: 400,
+            data: null,
+          });
+
+          return;
+        }
+
         res.status(409).json({
           message: "An account with that email already exists",
           status: 409,
@@ -157,7 +168,18 @@ export const isUniqueUserOnProfileEdit = async (
 
     if (username) {
       const usernameExists = await UserModel.findOne({ username });
-      if (usernameExists && usernameExists._id.toString() !== id) {
+
+      if (usernameExists) {
+        if (usernameExists._id.toString() === id) {
+          res.status(400).json({
+            message: "You're already using this username",
+            status: 400,
+            data: null,
+          });
+
+          return;
+        }
+
         res.status(409).json({
           message: "Username is already taken",
           status: 409,
@@ -167,7 +189,6 @@ export const isUniqueUserOnProfileEdit = async (
         return;
       }
     }
-
     next();
   } catch (error) {
     next(error);

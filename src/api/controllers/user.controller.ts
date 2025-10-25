@@ -199,7 +199,7 @@ export const getUserByUsername = async (
   }
 };
 
-const DEFAULT_IMG_PATH = "users/user-placeholder.png";
+const DEFAULT_IMG_PATH = "user-placeholder/user-placeholder.png";
 const DEFAULT_IMG_PUBLIC_URL =
   "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/users/user-placeholder.png";
 
@@ -415,7 +415,7 @@ export const editUser = async (
       }
     }
 
-    const userUpdated = await UserModel.findByIdAndUpdate(id, updates, { new: true })
+    const userUpdated = await UserModel.findByIdAndUpdate(id, { ...updates, imgPath, imgPublicUrl }, { new: true })
       .populate("plants")
       .select("-password")
       .lean<PublicUser>();

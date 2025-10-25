@@ -53,7 +53,7 @@ userRouter.put(
   upload.single("imgPath"),
   checkUserPassword,
   isUniqueUserOnProfileEdit,
-  editUser
+  editUser,
 );
 // PATCH
 userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changePassword);

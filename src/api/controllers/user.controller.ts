@@ -764,19 +764,32 @@ export const deleteUserPlant = async (
 
 // DELETE USER
 export const deleteUser = async (
-  req: AuthRequest<{ id: string }>,
+  req: AuthRequest<{ id: string }, {}, { password: string }>,
   res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const { password } = req.body;
 
-    const userInDatabase = await UserModel.findById(id).populate("plants").select("-password");
+    const userInDatabase = await UserModel.findById(id).populate("plants");
 
     if (!userInDatabase) {
       res.status(404).json({
         message: "User not found",
         status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const passwordMatches = await bcrypt.compare(password, userInDatabase.password);
+
+    if (!passwordMatches) {
+      res.status(401).json({
+        message: "Password incorrect",
+        status: 401,
         data: null,
       });
 

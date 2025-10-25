@@ -199,8 +199,8 @@ export const getUserByUsername = async (
   }
 };
 
-const DEFAULT_IMG_PATH = "user-placeholder/user-placeholder.png";
-const DEFAULT_IMG_PUBLIC_URL =
+const DEFAULT_PROFILE_PIC_IMG_PATH = "user-placeholder/user-placeholder.png";
+const DEFAULT_PROFILE_PIC_IMG_PUBLIC_URL =
   "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/users/user-placeholder.png";
 
 // REGISTER
@@ -214,8 +214,8 @@ export const registerUser = async (
     const user = new UserModel({
       ...req.body,
       role: "user",
-      imgPath: DEFAULT_IMG_PATH,
-      imgPublicUrl: DEFAULT_IMG_PUBLIC_URL,
+      imgPath: DEFAULT_PROFILE_PIC_IMG_PATH,
+      imgPublicUrl: DEFAULT_PROFILE_PIC_IMG_PUBLIC_URL,
     });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
@@ -383,8 +383,6 @@ export const editUser = async (
 
       return;
     }
-
-    console.log(userInDatabase);
 
     const profilePic = req.file;
     let imgPath = userInDatabase.imgPath;
@@ -572,6 +570,10 @@ export const getUserPlants = async (
   }
 };
 
+const DEFAULT_PLANT_PIC_IMG_PATH = "user-placeholder/plant-placeholder.png";
+const DEFAULT_PLANT_PIC_IMG_PUBLIC_URL =
+  "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/user-placeholder/plant-placeholder.png";
+
 // ADD NEW PLANT TO USER PROFILE (preceded by flexiblePlantsearch())
 export const addPlantToProfile = async (
   req: AuthRequest<{}, {}, NewUserPlant>,
@@ -606,39 +608,60 @@ export const addPlantToProfile = async (
     }
 
     const plantImg = req.file;
+    let imgPath = plantInRepository.imgPath;
+    let imgPublicUrl = plantInRepository.imgPublicUrl;
 
-    if (!plantImg) {
-      res.status(400).json({
-        message: "No plant image uploaded",
-        status: 400,
-        data: null,
+    if (plantImg) {
+      try {
+        await isAllowedImage(plantImg);
+
+        if (plantInRepository.imgPath) {
+          const { error: deleteError } = await supabase.storage.from("images").remove([plantInRepository.imgPath]);
+
+          if (deleteError) console.error(deleteError.message);
+        }
+
+        const uploaded = await supabaseUpload(plantImg);
+        imgPath = uploaded.imgPath;
+        imgPublicUrl = uploaded.imgPublicUrl;
+
+        const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: imgPublicUrl });
+        const savedUserPlant = await userPlant.save();
+
+        await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
+
+        res.status(201).json({
+          message: "Plant added to user profile",
+          status: 201,
+          data: savedUserPlant,
+        });
+      } catch (error) {
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Invalid image",
+          status: 400,
+          data: null,
+        });
+
+        return;
+      }
+    } else {
+      const userPlant = new UserPlantModel({
+        userId,
+        plantId,
+        nameByUser,
+        imgPath: DEFAULT_PLANT_PIC_IMG_PATH,
+        imgPublicUrl: DEFAULT_PLANT_PIC_IMG_PUBLIC_URL,
       });
+      const savedUserPlant = await userPlant.save();
 
-      return;
+      await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
+
+      res.status(201).json({
+        message: "Plant added to user profile",
+        status: 201,
+        data: savedUserPlant,
+      });
     }
-
-    await isAllowedImage(plantImg).catch((error) => {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Invalid image",
-        status: 400,
-        data: null,
-      });
-
-      return;
-    });
-
-    const { imgPath, imgPublicUrl } = await supabaseUpload(plantImg);
-
-    const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: imgPublicUrl });
-    const savedUserPlant = await userPlant.save();
-
-    await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
-
-    res.status(201).json({
-      message: "Plant added to user profile",
-      status: 201,
-      data: savedUserPlant,
-    });
   } catch (error) {
     next(error);
   }

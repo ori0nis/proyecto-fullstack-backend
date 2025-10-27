@@ -19,6 +19,7 @@ import { supabaseUpload } from "../../middlewares/index.js";
 import { supabase } from "../../config/index.js";
 import { NewUserPlant, PlantResponse, UserPlant } from "../../types/plant/index.js";
 import { isProduction } from "../../index.js";
+import { Cascade } from "@xavisoft/mongoose-cascade";
 
 // GET ALL USERS
 export const getAllUsers = async (
@@ -393,13 +394,15 @@ export const editUser = async (
       try {
         await isAllowedImage(profilePic);
 
-        if (userInDatabase.imgPath) {
+        const uploaded = await supabaseUpload(profilePic);
+
+        // Delete previous image
+        if (userInDatabase.imgPath && userInDatabase.imgPath !== DEFAULT_PROFILE_PIC_IMG_PATH) {
           const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
 
           if (deleteError) console.error(deleteError.message);
         }
 
-        const uploaded = await supabaseUpload(profilePic);
         imgPath = uploaded.imgPath;
         imgPublicUrl = uploaded.imgPublicUrl;
       } catch (error) {
@@ -582,7 +585,6 @@ export const addPlantToProfile = async (
 ): Promise<void> => {
   try {
     const { plantId, nameByUser } = req.body;
-
     const userId = req.user?._id;
 
     if (!userId) {
@@ -615,18 +617,24 @@ export const addPlantToProfile = async (
       try {
         await isAllowedImage(plantImg);
 
-        if (plantInRepository.imgPath) {
+        const uploaded = await supabaseUpload(plantImg);
+
+        if (plantInRepository.imgPath && plantInRepository.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
           const { error: deleteError } = await supabase.storage.from("images").remove([plantInRepository.imgPath]);
 
           if (deleteError) console.error(deleteError.message);
         }
 
-        const uploaded = await supabaseUpload(plantImg);
         imgPath = uploaded.imgPath;
         imgPublicUrl = uploaded.imgPublicUrl;
 
-        const userPlant = new UserPlantModel({ userId, plantId, nameByUser, imgPath, imgPublicUrl: imgPublicUrl });
-        const savedUserPlant = await userPlant.save();
+        const savedUserPlant = await UserPlantModel.create({
+          userId,
+          plantId,
+          nameByUser,
+          imgPath,
+          imgPublicUrl: imgPublicUrl,
+        });
 
         await UserModel.findByIdAndUpdate(userId, { $push: { plants: savedUserPlant._id } });
 
@@ -681,9 +689,11 @@ export const editUserPlant = async (
     let imgPath = userPlant.imgPath;
     let imgPublicUrl = userPlant.imgPublicUrl;
 
-    if (plantImg) {
+    if (plantImg && userPlant.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
       try {
         await isAllowedImage(plantImg);
+
+        const uploaded = await supabaseUpload(plantImg);
 
         const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 
@@ -692,7 +702,6 @@ export const editUserPlant = async (
           console.error(deleteError.message);
         }
 
-        const uploaded = await supabaseUpload(plantImg);
         imgPath = uploaded.imgPath;
         imgPublicUrl = uploaded.imgPublicUrl;
       } catch (error) {
@@ -796,16 +805,23 @@ export const deleteUser = async (
       return;
     }
 
-    const { error: deleteError } = await supabase.storage.from("images").remove([userInDatabase.imgPath]);
+    const userToDelete = await UserModel.findById(id).select("-password").populate("plants").lean<PublicUser>();
 
-    // If supabase deletion fails, we log the error but don't terminate execution
-    if (deleteError) {
-      console.error(deleteError.message);
+    const cascade = new Cascade();
+    cascade.init();
+
+    await cascade.delete(UserModel, { _id: id });
+
+    if (userToDelete?.imgPath) {
+      const { error: deleteError } = await supabase.storage.from("images").remove([userToDelete.imgPath]);
+
+      // If supabase deletion fails, we log the error but don't terminate execution
+      if (deleteError) {
+        console.error(deleteError.message);
+      }
     }
 
-    const userDeleted = await UserModel.findByIdAndDelete(id).select("-password").lean<PublicUser>();
-
-    if (!userDeleted) {
+    if (!userToDelete) {
       res.status(500).json({
         message: "Error deleting user",
         status: 500,
@@ -818,7 +834,7 @@ export const deleteUser = async (
     res.status(200).json({
       message: "User deleted",
       status: 200,
-      data: userDeleted,
+      data: userToDelete,
     });
   } catch (error) {
     next(error);

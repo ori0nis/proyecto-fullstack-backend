@@ -740,11 +740,13 @@ export const deleteUserPlant = async (
   try {
     const userPlant = req.userPlant!;
 
-    const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
+    if (userPlant.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
+      const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 
-    // If supabase deletion fails, we log the error but don't terminate execution
-    if (deleteError) {
-      console.error(deleteError.message);
+      // If supabase deletion fails, we log the error but don't terminate execution
+      if (deleteError) {
+        console.error(deleteError.message);
+      }
     }
 
     const plantDeleted = await UserPlantModel.findByIdAndDelete(userPlant._id).lean<UserPlant>();
@@ -812,7 +814,7 @@ export const deleteUser = async (
 
     await cascade.delete(UserModel, { _id: id });
 
-    if (userToDelete?.imgPath) {
+    if (userToDelete?.imgPath && userToDelete?.imgPath !== DEFAULT_PROFILE_PIC_IMG_PATH) {
       const { error: deleteError } = await supabase.storage.from("images").remove([userToDelete.imgPath]);
 
       // If supabase deletion fails, we log the error but don't terminate execution

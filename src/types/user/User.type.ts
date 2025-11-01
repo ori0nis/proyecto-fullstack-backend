@@ -16,5 +16,3 @@ export interface User {
 
 //? Type for user update
 export type UpdatedUser = Omit<User, "_id" | "role" | "password" | "plants">
-//? Type for search by username response
-export type UserProfile = Pick<User, "username" | "plant_care_skill_level" | "plants">;

@@ -176,7 +176,7 @@ export const getUserByUsername = async (
     }
 
     const userInDatabase = await UserModel.findOne({ username: username })
-      .select("username plant_care_skill_level plants -_id")
+      .select("username plant_care_skill_level plants imgPublicUrl -_id -password -role -imgPath")
       .populate("plants")
       .lean<UserProfile>();
 
@@ -202,7 +202,7 @@ export const getUserByUsername = async (
 
 const DEFAULT_PROFILE_PIC_IMG_PATH = "user-placeholder/user-placeholder.png";
 const DEFAULT_PROFILE_PIC_IMG_PUBLIC_URL =
-  "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/users/user-placeholder.png";
+  "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/user-placeholder/user-placeholder.png";
 
 // REGISTER
 export const registerUser = async (

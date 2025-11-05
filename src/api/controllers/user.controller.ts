@@ -24,12 +24,7 @@ import { Cascade } from "@xavisoft/mongoose-cascade";
 // GET ALL USERS
 export const getAllUsers = async (
   req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
-  res: Response<
-    UserResponse<{
-      users: PublicUser[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -62,7 +57,7 @@ export const getAllUsers = async (
       message: "Users found",
       status: 200,
       data: {
-        users,
+        users: users,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -105,7 +100,10 @@ export const getUserById = async (
     res.status(200).json({
       message: "User found",
       status: 200,
-      data: userInDatabase,
+      data: {
+        users: [userInDatabase],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -149,7 +147,10 @@ export const getUserByEmail = async (
     res.status(200).json({
       message: "User found",
       status: 200,
-      data: userInDatabase,
+      data: {
+        users: [userInDatabase],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -193,7 +194,10 @@ export const getUserByUsername = async (
     res.status(200).json({
       message: "User found",
       status: 200,
-      data: userInDatabase,
+      data: {
+        users: [userInDatabase],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -228,7 +232,10 @@ export const registerUser = async (
     res.status(201).json({
       message: "User created",
       status: 201,
-      data: publicUser,
+      data: {
+        users: [publicUser],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -296,7 +303,8 @@ export const loginUser = async (
       message: "User logged in with token",
       status: 200,
       data: {
-        user: publicUser,
+        users: [{ user: publicUser }],
+        meta: null,
       },
     });
   } catch (error) {
@@ -329,7 +337,8 @@ export const getCurrentUser = async (
       message: "Authenticated user",
       status: 200,
       data: {
-        user: publicUser,
+        users: [{ user: publicUser }],
+        meta: null,
       },
     });
   } catch (error) {
@@ -434,7 +443,10 @@ export const editUser = async (
     res.status(200).json({
       message: "User updated",
       status: 200,
-      data: userUpdated,
+      data: {
+        users: [userUpdated],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -505,7 +517,10 @@ export const changePassword = async (
     res.status(200).json({
       message: "Password successfully changed",
       status: 200,
-      data: userUpdated,
+      data: {
+        users: [userUpdated],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -515,12 +530,7 @@ export const changePassword = async (
 // GET USER PLANTS
 export const getUserPlants = async (
   req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      userPlants: UserPlant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<UserPlant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -564,7 +574,7 @@ export const getUserPlants = async (
       message: "Plants found",
       status: 200,
       data: {
-        userPlants,
+        plants: userPlants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -641,7 +651,10 @@ export const addPlantToProfile = async (
         res.status(201).json({
           message: "Plant added to user profile",
           status: 201,
-          data: savedUserPlant,
+          data: {
+            plants: [savedUserPlant],
+            meta: null,
+          },
         });
       } catch (error) {
         res.status(400).json({
@@ -667,7 +680,10 @@ export const addPlantToProfile = async (
       res.status(201).json({
         message: "Plant added to user profile",
         status: 201,
-        data: savedUserPlant,
+        data: {
+          plants: [savedUserPlant],
+          meta: null,
+        },
       });
     }
   } catch (error) {
@@ -721,10 +737,23 @@ export const editUserPlant = async (
       { new: true }
     ).lean<UserPlant>();
 
+    if (!plantUpdated) {
+      res.status(404).json({
+        message: "Plant not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
     res.status(200).json({
       message: "Plant successfully updated",
       status: 200,
-      data: plantUpdated,
+      data: {
+        plants: [plantUpdated],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -766,7 +795,10 @@ export const deleteUserPlant = async (
     res.status(200).json({
       message: "Plant deleted",
       status: 200,
-      data: plantDeleted,
+      data: {
+        plants: [plantDeleted],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -836,7 +868,10 @@ export const deleteUser = async (
     res.status(200).json({
       message: "User deleted",
       status: 200,
-      data: userToDelete,
+      data: {
+        users: [userToDelete],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);

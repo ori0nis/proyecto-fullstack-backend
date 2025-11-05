@@ -11,12 +11,7 @@ import { PlantModel } from "./../models/index.js";
 // GET ALL PLANTS (UNIVERSAL REPOSITORY)
 export const getAllPlants = async (
   req: AuthRequest<{}, {}, {}, { page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      plants: Plant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -44,7 +39,7 @@ export const getAllPlants = async (
       message: "Plants found",
       status: 200,
       data: {
-        plants,
+        plants: plants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -87,7 +82,10 @@ export const getPlantById = async (
     res.status(200).json({
       message: "Plant found",
       status: 200,
-      data: plant,
+      data: {
+        plants: [plant],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -97,12 +95,7 @@ export const getPlantById = async (
 // GET PLANTS BY SCIENTIFIC NAME (UNIVERSAL REPOSITORY)
 export const getPlantsByScientificName = async (
   req: AuthRequest<{}, {}, {}, { scientific_name: string; page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      plants: Plant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -157,7 +150,7 @@ export const getPlantsByScientificName = async (
       message: "Plants found",
       status: 200,
       data: {
-        plants,
+        plants: plants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -169,12 +162,7 @@ export const getPlantsByScientificName = async (
 // GET PLANTS BY TYPE (UNIVERSAL REPOSITORY)
 export const getPlantsByType = async (
   req: AuthRequest<{}, {}, {}, { type: string; page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      plants: Plant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -225,7 +213,7 @@ export const getPlantsByType = async (
       message: "Plants found",
       status: 200,
       data: {
-        plants,
+        plants: plants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -237,12 +225,7 @@ export const getPlantsByType = async (
 // GET PLANTS BY COMMON NAME (UNIVERSAL REPOSITORY)
 export const getPlantsByCommonName = async (
   req: AuthRequest<{}, {}, {}, { common_name: string; page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      plants: Plant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -297,7 +280,7 @@ export const getPlantsByCommonName = async (
       message: "Plants found",
       status: 200,
       data: {
-        plants,
+        plants: plants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -309,12 +292,7 @@ export const getPlantsByCommonName = async (
 // FLEXIBLE SEARCH (perfect for adding plants to user profile)
 export const flexiblePlantSearch = async (
   req: AuthRequest<{}, {}, {}, { query: string; page?: string; limit?: string }>,
-  res: Response<
-    PlantResponse<{
-      plants: Plant[];
-      meta: { page: number; limit: number; total: number; hasMore: boolean };
-    }>
-  >,
+  res: Response<PlantResponse<Plant>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -369,7 +347,7 @@ export const flexiblePlantSearch = async (
       message: "Plants found",
       status: 200,
       data: {
-        plants,
+        plants: plants,
         meta: { page, limit, total, hasMore },
       },
     });
@@ -450,7 +428,10 @@ export const postNewPlant = async (
     res.status(201).json({
       message: "Plant posted",
       status: 201,
-      data: plantPosted,
+      data: {
+        plants: [plantPosted],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -514,10 +495,23 @@ export const editPlant = async (
       { new: true }
     ).lean<Plant>();
 
+    if (!plantUpdated) {
+      res.status(500).json({
+        message: "Plant not updated",
+        status: 500,
+        data: null,
+      });
+
+      return;
+    }
+
     res.status(200).json({
       message: "Plant updated",
       status: 200,
-      data: plantUpdated,
+      data: {
+        plants: [plantUpdated],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);
@@ -566,7 +560,10 @@ export const deletePlant = async (
     res.status(200).json({
       message: "Plant deleted",
       status: 200,
-      data: plantDeleted,
+      data: {
+        plants: [plantDeleted],
+        meta: null,
+      },
     });
   } catch (error) {
     next(error);

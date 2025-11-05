@@ -100,7 +100,8 @@ export const refreshToken = async (
       message: "Token refreshed successfully",
       status: 200,
       data: {
-        user: user,
+        users: [{ user: user }],
+        meta: null,
       },
     });
   } catch (error) {

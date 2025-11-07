@@ -9,7 +9,6 @@ import {
   PublicUser,
   UserProfile,
   UpdatedUser,
-  SingleUserResponse,
   User,
 } from "../../types/user/index.js";
 import { PlantModel, UserModel, UserPlantModel } from "../models/index.js";
@@ -245,7 +244,7 @@ export const registerUser = async (
 // LOGIN
 export const loginUser = async (
   req: Request<{}, {}, LoginUser>,
-  res: Response<UserResponse<SingleUserResponse>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -303,7 +302,7 @@ export const loginUser = async (
       message: "User logged in with token",
       status: 200,
       data: {
-        users: [{ user: publicUser }],
+        users: [publicUser],
         meta: null,
       },
     });
@@ -315,7 +314,7 @@ export const loginUser = async (
 // VERIFY USER AUTH (used by AuthContext in the frontend)
 export const getCurrentUser = async (
   req: AuthRequest,
-  res: Response<UserResponse<SingleUserResponse>>,
+  res: Response<UserResponse<PublicUser>>,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -337,7 +336,7 @@ export const getCurrentUser = async (
       message: "Authenticated user",
       status: 200,
       data: {
-        users: [{ user: publicUser }],
+        users: [publicUser],
         meta: null,
       },
     });

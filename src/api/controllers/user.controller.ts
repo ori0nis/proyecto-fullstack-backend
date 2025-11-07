@@ -177,7 +177,7 @@ export const getUserByUsername = async (
     }
 
     const userInDatabase = await UserModel.findOne({ username: username })
-      .select("username plant_care_skill_level plants imgPublicUrl -_id -password -role -imgPath")
+      .select("username plant_care_skill_level plants imgPublicUrl")
       .populate("plants")
       .lean<UserProfile>();
 

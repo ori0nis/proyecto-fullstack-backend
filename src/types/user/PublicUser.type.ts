@@ -7,6 +7,7 @@ export interface PublicUser {
   imgPath: string;
   imgPublicUrl: string;
   plant_care_skill_level: string;
+  profile_bio: string;
   role: string;
   plants: Types.ObjectId[];
 }

@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema<User>(
       enum: ["beginner", "intermediate", "advanced", "Demeter"],
       required: [true, "Please provide a valid plant care skill level: beginner, intermediate, advanced"],
     },
+    profile_bio: { type: String, required: true, trim: true },
     role: {
       type: String,
       enum: ["user", "admin"],

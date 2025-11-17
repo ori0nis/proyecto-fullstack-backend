@@ -7,5 +7,6 @@ export interface NewUser {
   plant_care_skill_level: string;
   imgPath?: string;
   imgPublicUrl?: string;
+  profile_bio?: string;
   plants?: Types.ObjectId[];
 }

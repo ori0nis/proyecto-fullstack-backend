@@ -7,6 +7,7 @@ export interface UserPlant {
   userId: Types.ObjectId;
   plantId: Types.ObjectId;
   nameByUser: string;
+  scientific_name: string;
   imgPath: string;
   imgPublicUrl: string;
 }

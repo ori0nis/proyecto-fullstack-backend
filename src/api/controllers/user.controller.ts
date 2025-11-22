@@ -641,6 +641,7 @@ export const addPlantToProfile = async (
           userId,
           plantId,
           nameByUser,
+          scientific_name: plantInRepository.scientific_name,
           imgPath,
           imgPublicUrl: imgPublicUrl,
         });
@@ -669,6 +670,7 @@ export const addPlantToProfile = async (
         userId,
         plantId,
         nameByUser,
+        scientific_name: plantInRepository.scientific_name,
         imgPath: DEFAULT_PLANT_PIC_IMG_PATH,
         imgPublicUrl: DEFAULT_PLANT_PIC_IMG_PUBLIC_URL,
       });

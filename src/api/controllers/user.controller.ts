@@ -706,17 +706,17 @@ export const editUserPlant = async (
     let imgPath = userPlant.imgPath;
     let imgPublicUrl = userPlant.imgPublicUrl;
 
-    if (plantImg && userPlant.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
+    if (plantImg) {
       try {
         await isAllowedImage(plantImg);
 
         const uploaded = await supabaseUpload(plantImg);
+        
+        if (userPlant.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
+          const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 
-        const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
-
-        // If supabase deletion fails, we log the error but don't terminate execution
-        if (deleteError) {
-          console.error(deleteError.message);
+          // If supabase deletion fails, we log the error but don't terminate execution
+          if (deleteError) console.error(deleteError.message);
         }
 
         imgPath = uploaded.imgPath;

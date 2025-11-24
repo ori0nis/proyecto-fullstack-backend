@@ -220,6 +220,7 @@ export const registerUser = async (
       role: "user",
       imgPath: DEFAULT_PROFILE_PIC_IMG_PATH,
       imgPublicUrl: DEFAULT_PROFILE_PIC_IMG_PUBLIC_URL,
+      profile_bio: ""
     });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType

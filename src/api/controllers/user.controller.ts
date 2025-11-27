@@ -220,7 +220,7 @@ export const registerUser = async (
       role: "user",
       imgPath: DEFAULT_PROFILE_PIC_IMG_PATH,
       imgPublicUrl: DEFAULT_PROFILE_PIC_IMG_PUBLIC_URL,
-      profile_bio: ""
+      profile_bio: "",
     });
 
     // First we save the mongoose document, then we translate it to plain object so that it can be sent as response with PublicUserType
@@ -583,6 +583,74 @@ export const getUserPlants = async (
   }
 };
 
+// GET FRIEND'S PLANTS
+export const getFriendsPlants = async (
+  req: AuthRequest<{}, {}, {}, { username: string; page?: string; limit?: string }>,
+  res: Response<PlantResponse<UserPlant>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const username = req.query.username;
+
+    const page = parseInt(req.query.page || "1");
+    const limit = parseInt(req.query.limit || "20");
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      res.status(400).json({
+        message: "Invalid pagination parameters",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const friend = await UserModel.findOne({ username }).select("-password").lean<PublicUser>();
+
+    if (!friend) {
+      res.status(404).json({
+        message: "Friend not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await UserPlantModel.countDocuments({ userId: friend._id });
+
+    const friendPlants = await UserPlantModel.find({ userId: friend._id })
+      .populate("plantId")
+      .skip(skip)
+      .limit(limit)
+      .lean<UserPlant[]>();
+
+    if (!friendPlants) {
+      res.status(404).json({
+        message: "No plants found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    const hasMore = skip + friendPlants.length < total;
+
+    res.status(200).json({
+      message: "Plants found",
+      status: 200,
+      data: {
+        plants: friendPlants,
+        meta: { page, limit, total, hasMore },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const DEFAULT_PLANT_PIC_IMG_PATH = "user-placeholder/plant-placeholder.png";
 const DEFAULT_PLANT_PIC_IMG_PUBLIC_URL =
   "https://tqhqslzmeidixghjkukr.supabase.co/storage/v1/object/public/images/user-placeholder/plant-placeholder.png";
@@ -712,7 +780,7 @@ export const editUserPlant = async (
         await isAllowedImage(plantImg);
 
         const uploaded = await supabaseUpload(plantImg);
-        
+
         if (userPlant.imgPath !== DEFAULT_PLANT_PIC_IMG_PATH) {
           const { error: deleteError } = await supabase.storage.from("images").remove([userPlant.imgPath]);
 

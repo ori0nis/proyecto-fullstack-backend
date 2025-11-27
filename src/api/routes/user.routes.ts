@@ -19,6 +19,7 @@ import {
   editUserPlant,
   getAllUsers,
   getCurrentUser,
+  getFriendsPlants,
   getUserByEmail,
   getUserById,
   getUserByUsername,
@@ -34,10 +35,11 @@ export const userRouter = express.Router();
 // GET
 userRouter.get("/me", isAuth, getCurrentUser);
 userRouter.get("/search/all-users", isAuth, isAdmin, getAllUsers);
-userRouter.get("/:id", isAuth, isAdmin, getUserById);
 userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
 userRouter.get("/search/user/username", isAuth, getUserByUsername);
+userRouter.get("/search/friend/plants", isAuth, getFriendsPlants);
 userRouter.get("/user/profile/plants", isAuth, getUserPlants);
+userRouter.get("/:id", isAuth, isAdmin, getUserById);
 // POST
 userRouter.post("/register", isUniqueUserOnRegister, registerUser);
 userRouter.post("/login", loginUser);

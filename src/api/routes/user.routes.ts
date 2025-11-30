@@ -22,11 +22,12 @@ import {
   getFriendsPlants,
   getUserByEmail,
   getUserById,
-  getUserByUsername,
+  getPublicUserByUsername,
   getUserPlants,
   loginUser,
   logoutUser,
   registerUser,
+  getUserByUsername,
 } from "../controllers/index.js";
 import { upload } from "../../config/index.js";
 
@@ -36,7 +37,8 @@ export const userRouter = express.Router();
 userRouter.get("/me", isAuth, getCurrentUser);
 userRouter.get("/search/all-users", isAuth, isAdmin, getAllUsers);
 userRouter.get("/search/user/email", isAuth, isAdmin, getUserByEmail);
-userRouter.get("/search/user/username", isAuth, getUserByUsername);
+userRouter.get("/search/user/username", isAuth, getPublicUserByUsername);
+userRouter.get("/admin/search/user/username", isAuth, isAdmin, getUserByUsername);
 userRouter.get("/search/friend/plants", isAuth, getFriendsPlants);
 userRouter.get("/user/profile/plants", isAuth, getUserPlants);
 userRouter.get("/:id", isAuth, isAdmin, getUserById);
@@ -55,7 +57,7 @@ userRouter.put(
   upload.single("imgPath"),
   checkUserPassword,
   isUniqueUserOnProfileEdit,
-  editUser,
+  editUser
 );
 // PATCH
 userRouter.patch("/user/:id/change-password", isAuth, canChangePassword, changePassword);

@@ -156,8 +156,8 @@ export const getUserByEmail = async (
   }
 };
 
-// GET USER BY USERNAME
-export const getUserByUsername = async (
+// GET USER BY USERNAME (PUBLIC)
+export const getPublicUserByUsername = async (
   req: AuthRequest<{}, {}, {}, { username: string }>,
   res: Response<UserResponse<UserProfile>>,
   next: NextFunction
@@ -179,6 +179,53 @@ export const getUserByUsername = async (
       .select("username plant_care_skill_level plants imgPublicUrl profile_bio")
       .populate("plants")
       .lean<UserProfile>();
+
+    if (!userInDatabase) {
+      res.status(404).json({
+        message: "User not found",
+        status: 404,
+        data: null,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "User found",
+      status: 200,
+      data: {
+        users: [userInDatabase],
+        meta: null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET USER BY USERNAME (FOR ADMIN, WITH ALL FIELDS)
+export const getUserByUsername = async (
+  req: AuthRequest<{}, {}, {}, { username: string }>,
+  res: Response<UserResponse<PublicUser>>,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { username } = req.query;
+
+    if (!username || username.trim() === "") {
+      res.status(400).json({
+        message: "Please provide a valid username",
+        status: 400,
+        data: null,
+      });
+
+      return;
+    }
+
+    const userInDatabase = await UserModel.findOne({ username: username })
+      .select("-password")
+      .populate("plants")
+      .lean<PublicUser>();
 
     if (!userInDatabase) {
       res.status(404).json({

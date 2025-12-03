@@ -42,7 +42,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS
-const allowedOrigins = ["http://localhost:5173", "https://myplants-backend.onrender.com"]; // TODO: Add deployment URL in the future
+const allowedOrigins = ["http://localhost:5173", "https://myplants-backend.onrender.com", "https://myplantsdotio.vercel.app"];
 
 app.use(
   cors({

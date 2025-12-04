@@ -21,6 +21,17 @@ export const isAuth: RequestHandler = async (req: AuthRequest, res: Response, ne
     }
 
     const decoded = verifyToken({ token }) as JWTPayload;
+
+    if (!decoded) {
+      res.status(401).json({
+        message: "Unauthorized",
+        status: 401,
+        data: null,
+      });
+
+      return;
+    }
+
     const user = await UserModel.findById(decoded._id).select("-password").lean<User>();
 
     if (!user) {
